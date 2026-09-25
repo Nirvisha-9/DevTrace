@@ -19,6 +19,10 @@ class RunReq(BaseModel):
     interval: int=60
     question: Optional[str]=None
 
+class AskReq(BaseModel):
+    topic: str
+    question: str
+
 def _running(topic):
     r=RUNNERS.get(topic); return bool(r and r["thread"].is_alive())
 
@@ -54,7 +58,7 @@ def api_run(req:RunReq):
         except Exception as e: logs.append(f"stopped: {e}")
         logs.append("loop finished")
     t=threading.Thread(target=work,daemon=True)
-    RUNNERS[req.topic]={"thread":t,"stop":stop,"logs":logs}
+    RUNNERS[req.topic]={"thread":t,"stop":stop,"logs":logs,"orch":o}
     t.start()
     return {"started":req.topic}
 
@@ -70,6 +74,32 @@ def api_reset(topic:str):
     if _running(topic): raise HTTPException(409,"stop the loop first")
     Store(topic).reset(); RUNNERS.pop(topic,None)
     return {"reset":topic}
+
+@app.post("/api/ask")
+def api_ask(req:AskReq):
+    """Answer from what the agent already knows. Waits its turn if the loop is using the model."""
+    q=req.question.strip()
+    if not q: raise HTTPException(400,"empty question")
+    from devtrace.cli import reasoner
+    from devtrace.agent.ask import answer
+    st=Store(req.topic)
+    try: res=answer(reasoner(),st,st.load_state(),q)
+    except Exception as e: raise HTTPException(500,f"could not answer: {e}")
+    ids=set(res["cited"])
+    res["sources"]={e["evidence_id"]:{"title":e.get("title",""),"url":e.get("url","")}
+                    for e in st.evidence() if e["evidence_id"] in ids}
+    return res
+
+@app.post("/api/research")
+def api_research(req:AskReq):
+    """Hand a question to the agent; it becomes the next round's investigation."""
+    q=req.question.strip()
+    if not q: raise HTTPException(400,"empty question")
+    if _running(req.topic): RUNNERS[req.topic]["orch"].ask_to_research(q)
+    else:
+        st=Store(req.topic); state=st.load_state()
+        if q not in state.inbox: state.inbox.append(q); st.write_state(state)
+    return {"queued":q,"running":_running(req.topic)}
 
 @app.get("/",response_class=HTMLResponse)
 def home():

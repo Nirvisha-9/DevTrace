@@ -7,7 +7,7 @@ Layout: .devtrace/<topic-slug>/
   archive.jsonl    items that left working state (dropped, never deleted)
   cycles.jsonl     per-cycle log (question, counts, token usage, warnings)
 """
-import json, os, re
+import fcntl, json, os, re
 from devtrace.config import DATA_DIR
 from devtrace.models.state import WorkingState
 
@@ -41,6 +41,19 @@ class Store:
         with open(tmp,"w",encoding="utf8") as f: json.dump(state.compact(),f,indent=2)
         os.replace(tmp,self._p("state.json"))
         self._append("snapshots.jsonl",[state.compact()])
+
+    def try_lock(self):
+        """Exclusive per-topic lock so two agents (dashboard, CLI, another tab) never run the same topic at once.
+        Returns the open lock file, or None if someone else holds it."""
+        f=open(self._p("run.lock"),"w")
+        try: fcntl.flock(f,fcntl.LOCK_EX|fcntl.LOCK_NB); return f
+        except OSError: f.close(); return None
+
+    def write_state(self,state):
+        """Save without recording a snapshot (for edits made between rounds)."""
+        tmp=self._p("state.json.tmp")
+        with open(tmp,"w",encoding="utf8") as f: json.dump(state.compact(),f,indent=2)
+        os.replace(tmp,self._p("state.json"))
 
     def reset(self):
         for n in ("state.json","snapshots.jsonl","evidence.jsonl","archive.jsonl","cycles.jsonl"):

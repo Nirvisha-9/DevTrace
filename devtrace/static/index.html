@@ -158,6 +158,29 @@ details.more summary{cursor:pointer;font-weight:600;font-size:13px;padding:14px 
 .reason.merged,.reason.compacted{background:var(--surface-2);color:var(--text-2)}
 .reason.resolved{background:var(--good-soft);color:var(--good)}
 pre.log{margin:0;max-height:260px;overflow:auto;font:12px/1.6 "JetBrains Mono",monospace;color:var(--text-2);white-space:pre-wrap;background:var(--surface-2);border-radius:10px;padding:12px}
+.ask-row{display:flex;gap:8px}
+.ask-row input{flex:1}
+.answer{margin-top:14px;padding:14px 16px;border-radius:12px;background:var(--surface-2);display:none}
+.answer .txt{font-size:14px;line-height:1.6;overflow-wrap:anywhere}
+.answer .meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.conf{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px}
+.conf.high{background:var(--good-soft);color:var(--good)} .conf.medium{background:var(--info-soft);color:var(--accent)} .conf.low{background:var(--warn-soft);color:var(--warn)}
+.srcs{display:flex;flex-direction:column;gap:4px;margin-top:10px;font-size:12.5px}
+.srcs a{overflow-wrap:anywhere}
+.hint{font-size:12px;color:var(--muted);margin-top:8px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{font:inherit;font-size:12px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);color:var(--text-2);cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.badge{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.03em;padding:1px 7px;border-radius:999px;margin-right:6px;vertical-align:1px}
+.badge.new{background:var(--accent);color:#fff}
+.badge.ok{background:var(--good-soft);color:var(--good)}
+.kind{display:inline-block;font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:999px;margin-bottom:4px}
+.kind.recheck{background:var(--good-soft);color:var(--good)} .kind.user{background:var(--accent-soft);color:var(--accent)}
+.kind.corrected{background:var(--warn-soft);color:var(--warn)}
+.check{margin-top:10px;font-size:12.5px;color:var(--text-2);padding:8px 10px;border-radius:8px;background:var(--surface-2)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:13px;box-shadow:var(--shadow);display:none;z-index:9;max-width:90vw}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--line-strong);border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
 .two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
 
 @media (max-width:900px){
@@ -220,6 +243,23 @@ pre.log{margin:0;max-height:260px;overflow:auto;font:12px/1.6 "JetBrains Mono",m
 
   <div class="status" id="status"><span class="pulse"></span><div><b id="statusTitle">Idle</b> <span class="detail" id="statusDetail">Pick a library and press Start.</span></div></div>
 
+  <section class="card pad" style="margin-bottom:18px">
+    <h2>Ask DevTrace</h2>
+    <p class="sub">Ask about the library. It answers from what it has already read, with sources. No new search.</p>
+    <div class="ask-row">
+      <input id="askq" placeholder="e.g. Will upgrading to v15 break code that treats StripeObject like a dict?" onkeydown="if(event.key==='Enter')ask()">
+      <button class="b primary" id="askBtn" onclick="ask()">Ask</button>
+    </div>
+    <div class="chips" id="suggest"></div>
+    <div class="answer" id="answer">
+      <div class="txt" id="answerTxt"></div>
+      <div class="srcs" id="answerSrc"></div>
+      <div class="meta"><span class="conf" id="answerConf"></span>
+        <button class="b" id="researchBtn" onclick="research()" title="The agent will investigate this in its next round">Research this next round</button></div>
+      <div class="hint" id="answerHint"></div>
+    </div>
+  </section>
+
   <details class="how card" id="how">
     <summary><span class="chev">▶</span> How it works: one round, repeated</summary>
     <div class="steps">
@@ -254,6 +294,8 @@ pre.log{margin:0;max-height:260px;overflow:auto;font:12px/1.6 "JetBrains Mono",m
         <p class="sub">The question the agent chose for this round.</p>
         <div class="qbox" id="question">Nothing yet</div>
         <div class="next" id="next"></div>
+        <div id="lastCheck"></div>
+        <div id="inbox"></div>
       </div>
       <div class="card pad">
         <h2>What changed <span class="count" id="cChanges"></span></h2>
@@ -305,6 +347,7 @@ pre.log{margin:0;max-height:260px;overflow:auto;font:12px/1.6 "JetBrains Mono",m
   </details>
 
 </div>
+<div class="toast" id="toast"></div>
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -323,11 +366,42 @@ function rich(t){
   return esc(t).replace(/\s*\[([0-9a-f]{16})\]/g,(m,id)=>{const s=sources[id];
     return s&&s.url?` <a class="cite" href="${esc(s.url)}" target="_blank" rel="noopener" title="${esc(s.title)}">source</a>`:` <span class="cite" title="evidence ${id}">source</span>`});
 }
+function badges(x){
+  const s=lastData&&lastData.state; if(!s)return '';
+  let b=''; if(s.cycle&&s.added&&s.added[x]===s.cycle)b+='<span class="badge new">NEW</span>';
+  if(s.checked&&s.checked[x])b+=`<span class="badge ok">✓ re-checked r${s.checked[x]}</span>`;
+  return b;
+}
 function list(id,xs,cid,render){
-  $(id).innerHTML=(xs&&xs.length)?xs.map(x=>'<li>'+(render?render(x):rich(x))+'</li>').join(''):'<li class="none" style="background:none;border:0;padding:0">Nothing yet</li>';
+  $(id).innerHTML=(xs&&xs.length)?xs.slice().reverse().map(x=>'<li>'+badges(x)+(render?render(x):rich(x))+'</li>').join(''):'<li class="none" style="background:none;border:0;padding:0">Nothing yet</li>';
   if(cid)$(cid).textContent=xs&&xs.length?xs.length:'';
 }
 
+let lastAsked='';
+function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',3500)}
+async function ask(q){
+  topic=$('topic').value.trim(); q=(q||$('askq').value).trim(); if(!topic||!q)return;
+  $('askq').value=q; lastAsked=q; const btn=$('askBtn'); btn.disabled=true;
+  $('answer').style.display='block';
+  $('answerTxt').innerHTML='<span class="spin"></span>Thinking'+(lastData&&lastData.running?' (the agent is mid-round, so this may take up to a minute)…':'…');
+  $('answerSrc').innerHTML='';$('answerConf').textContent='';$('answerConf').className='conf';$('answerHint').textContent='';
+  try{
+    const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic,question:q})});
+    const d=await r.json(); if(!r.ok)throw new Error(d.detail||'failed');
+    Object.assign(sources,d.sources||{});
+    $('answerTxt').innerHTML=rich(d.answer);
+    const src=Object.entries(d.sources||{});
+    $('answerSrc').innerHTML=src.length?'<div style="color:var(--muted);font-size:12px">Sources</div>'+src.map(([id,x])=>`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title||x.url)}</a>`).join(''):'';
+    $('answerConf').textContent=d.confidence+' confidence'; $('answerConf').className='conf '+d.confidence;
+    $('answerHint').textContent=d.answered?'Want fresher info? Send it to the agent to research.':'Not covered yet. Send it to the agent and it will research this next round.';
+  }catch(e){$('answerTxt').textContent='Could not answer: '+e.message}
+  btn.disabled=false;
+}
+async function research(){
+  if(!lastAsked||!topic)return;
+  const r=await fetch('/api/research',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic,question:lastAsked})});
+  const d=await r.json(); toast(d.running?'Queued: the agent will research this in its next round.':'Queued: press Start and the agent will research this first.'); refresh();
+}
 async function start(){
   topic=$('topic').value.trim(); if(!topic){$('topic').focus();return}
   const c=$('cycles').value;
@@ -351,6 +425,7 @@ function status(d){
     cls='run'; const m=last.match(/^\[cycle (\d+)\] (.*)$/); const n=m?m[1]:s.cycle+1, body=m?m[2]:'';
     title=`Round ${n}`;
     if(/selecting question/.test(body)){detail='Deciding what to investigate next…';step='ask'}
+    else if(/^Q: Is this still accurate/.test(body)){detail='Re-checking an old belief: “'+body.slice(3).replace(/^Is this still accurate for the latest [^?]*\? /,'')+'”';step='search'}
     else if(/^Q: /.test(body)){detail='Searching the web: “'+body.slice(3)+'”';step='search'}
     else if(/observations/.test(body)){const o=body.match(/(\d+) observations, (\d+) new/);detail=`Read ${o?o[1]:''} pages (${o?o[2]:''} new, saved). Updating its summary with Liquid AI…`;step='think'}
     else if(/^done/.test(body)){detail='Round complete. Waiting before the next round…';step='wait'}
@@ -410,6 +485,12 @@ async function refresh(){
   const last=cs[cs.length-1];
   $('question').innerHTML=last?rich(last.question):'Nothing yet. Press Start.';
   $('next').innerHTML=s.next_action?'<b>Next step it suggested:</b> '+esc(s.next_action):'';
+  const lc=s.last_check||{};
+  $('lastCheck').innerHTML=lc.item?`<div class="check"><b>Latest re-check (round ${lc.cycle}):</b> ${rich(lc.item)} → <b>${{confirmed:'still true ✓',corrected:'outdated, corrected',reworded:'updated wording',unclear:'no new evidence either way'}[lc.outcome]||esc(lc.outcome)}</b></div>`:'';
+  $('inbox').innerHTML=(s.inbox&&s.inbox.length)?`<div class="check"><b>Your questions, next in line:</b><br>${s.inbox.map(q=>'• '+esc(q)).join('<br>')}</div>`:'';
+  const tidy=q=>String(q).replace(/\s*\[[A-Z]\d+\]/g,'').replace(/\s+-\s+need to .*$/i,'').trim();
+  const sug=[...(s.open_questions||[]).slice(-2).map(tidy),'What could break if I upgrade?','What changed most recently?'];
+  $('suggest').innerHTML=s.cycle?sug.map(q=>`<button class="chip" onclick="ask(this.textContent)">${esc(q)}</button>`).join(''):'';
   list('changes',s.active_changes,'cChanges'); list('facts',s.active_facts,'cFacts');
   list('risks',s.hypotheses,'cRisks'); list('open',s.open_questions,'cOpen');
   list('stale',s.stale_claims,'cStale',x=>{const p=x.split(' — superseded');return '<span class="was">'+rich(p[0])+'</span>'+(p[1]&&p[1].replace(/^:\s*/,'').trim()?'<span class="now">Now: '+rich(p[1].replace(/^:\s*/,''))+'</span>':'')});
@@ -422,7 +503,7 @@ async function refresh(){
   }
   $('sFilesH').textContent=s.impacted_files.length?'in your repo':'connect GitHub';
   $('rounds').innerHTML=cs.length?'<tr><th>#</th><th>What it investigated</th><th>New pages</th><th>Recalled</th><th>Archived</th><th>In focus</th><th>Time</th></tr>'+
-    cs.slice().reverse().map(c=>`<tr><td class="num">${c.cycle}</td><td>${esc(c.question)}${c.warnings&&c.warnings.length?`<div class="sub" style="margin:4px 0 0;color:var(--bad)">${esc(c.warnings.join('; '))}</div>`:''}</td><td class="num">${c.new_evidence}</td><td class="num">${c.recalled}</td><td class="num">${c.dropped}</td><td class="num">${c.working_state_size}</td><td class="num">${Math.round(c.seconds)}s</td></tr>`).join('')
+    cs.slice().reverse().map(c=>`<tr><td class="num">${c.cycle}</td><td>${c.kind==='recheck'?`<span class="kind ${c.check&&c.check.outcome==='corrected'?'corrected':'recheck'}">re-check${c.check?' · '+esc(c.check.outcome):''}</span><br>`:c.kind==='user'?'<span class="kind user">your question</span><br>':''}${rich(c.question)}${c.warnings&&c.warnings.length?`<div class="sub" style="margin:4px 0 0;color:var(--bad)">${esc(c.warnings.join('; '))}</div>`:''}</td><td class="num">${c.new_evidence}</td><td class="num">${c.recalled}</td><td class="num">${c.dropped}</td><td class="num">${c.working_state_size}</td><td class="num">${Math.round(c.seconds)}s</td></tr>`).join('')
     :'<tr><td class="none">No rounds yet.</td></tr>';
   $('arch').innerHTML=d.archive.length?d.archive.slice().reverse().map(a=>`<li><span class="reason ${esc(a.reason)}">${esc(a.reason)}</span><span style="color:var(--muted);font-size:12px">round ${a.cycle}</span><div style="margin-top:4px">${rich(a.item)}</div></li>`).join(''):'<li class="none" style="background:none;padding:0">Nothing archived yet.</li>';
   $('log').textContent=(d.logs||[]).join('\n')||'No activity yet.';

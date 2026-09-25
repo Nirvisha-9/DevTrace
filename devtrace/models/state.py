@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import List
+from typing import Dict, List
 from pydantic import BaseModel, Field
 
 def now_iso(): return datetime.now(timezone.utc).isoformat()
@@ -16,6 +16,10 @@ class WorkingState(BaseModel):
     code_signals: List[str]=Field(default_factory=list)
     impacted_files: List[dict]=Field(default_factory=list)
     recent_questions: List[str]=Field(default_factory=list)
+    added: Dict[str,int]=Field(default_factory=dict)      # item -> round it entered the state
+    checked: Dict[str,int]=Field(default_factory=dict)    # item -> round it was last re-verified
+    last_check: dict=Field(default_factory=dict)          # {"cycle","item","outcome"} of the latest re-check
+    inbox: List[str]=Field(default_factory=list)          # questions a person asked the agent to research
     evidence_count: int=0
     archived_count: int=0
     next_action: str=""
@@ -26,7 +30,7 @@ class WorkingState(BaseModel):
 
     def prompt_view(self):
         """What the model sees: bounded lists and counts only, never the evidence itself."""
-        d=self.model_dump(exclude={"last_updated"})
+        d=self.model_dump(exclude={"last_updated","added","checked","last_check","inbox"})
         d["impacted_files"]=[{"path":x.get("path"),"signals":x.get("signals",[])} for x in self.impacted_files]
         return d
 

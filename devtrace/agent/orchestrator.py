@@ -1,4 +1,4 @@
-import hashlib, time
+import hashlib, threading, time
 from datetime import datetime,timezone
 from devtrace.agent.state_editor import StateEditor
 from devtrace.store import Store
@@ -11,6 +11,12 @@ class Orchestrator:
         self.rawtree=rawtree; self.github=github
         self.editor=StateEditor(reasoner); self.store=store or Store(topic); self.log=log
         self.state=self.store.load_state()
+        self._inbox_lock=threading.Lock()
+
+    def ask_to_research(self,question):
+        """Queue a person's question; it becomes the next round's investigation."""
+        with self._inbox_lock:
+            if question not in self.state.inbox: self.state.inbox.append(question)
 
     def _event(self,event_type,warnings,**fields):
         s=self.state
@@ -24,10 +30,24 @@ class Orchestrator:
         except Exception as e: warnings.append(f"rawtree {event_type}: {e}")
 
     def run_cycle(self,question=None,observations=None):
+        lock=self.store.try_lock()
+        if lock is None: raise RuntimeError(f"'{self.topic}' is already being run by another DevTrace process")
+        try:
+            # pick up rounds another process may have run since this one loaded (keep queued questions)
+            disk=self.store.load_state()
+            if disk.cycle>self.state.cycle:
+                with self._inbox_lock:
+                    disk.inbox+=[x for x in self.state.inbox if x not in disk.inbox]; self.state=disk
+            return self._run_cycle(question,observations)
+        finally: lock.close()
+
+    def _run_cycle(self,question=None,observations=None):
         t0=time.time(); warnings=[]; cycle=self.state.cycle+1
         self.log(f"[cycle {cycle}] selecting question")
 
-        plan={"question":question,"reason":"provided by operator"} if question else self.editor.next_question(self.state)
+        with self._inbox_lock: inbox=list(self.state.inbox)
+        plan={"question":question,"reason":"provided by operator","kind":"user"} if question else \
+             self.editor.next_question(self.state,inbox)
         q=plan["question"]
         self.log(f"[cycle {cycle}] Q: {q}")
         self._event("question_selected",warnings,question=q,cycle=cycle)
@@ -50,7 +70,9 @@ class Orchestrator:
         self.log(f"[cycle {cycle}] {len(observations)} observations, {len(rows)} new")
 
         recalled=self.store.recall(q,exclude={o["evidence_id"] for o in obs})
-        new,dropped=self.editor.edit(self.state,cycle,q,obs,recalled)
+        new,dropped=self.editor.edit(self.state,cycle,q,obs,recalled,plan.get("verify"))
+        with self._inbox_lock:   # questions asked while this round ran are kept for the next one
+            new.inbox=[x for x in self.state.inbox if x!=q]
         new.evidence_count=self.state.evidence_count+len(rows)
         new.archived_count=self.state.archived_count+len(dropped)
         if dropped:
@@ -65,7 +87,9 @@ class Orchestrator:
         except Exception as e: warnings.append(f"github: {e}")
 
         new.last_updated=now()
-        self.state=new
+        with self._inbox_lock:
+            new.inbox+= [x for x in self.state.inbox if x not in new.inbox and x!=q]
+            self.state=new
         self.store.save_state(new)
         usage=self.reasoner.take_usage() if hasattr(self.reasoner,"take_usage") else {}
         self._event("state_compacted",warnings,question=q,new_evidence_count=len(rows),
@@ -74,6 +98,7 @@ class Orchestrator:
         if new.impacted_files: self._event("impact_detected",warnings,question=q)
 
         summary={"cycle":cycle,"timestamp":now(),"question":q,"reason":plan.get("reason",""),
+                 "kind":plan.get("kind","auto"),"check":new.last_check if plan.get("verify") else None,
                  "observations":len(observations),"new_evidence":len(rows),"recalled":len(recalled),
                  "dropped":len(dropped),"working_state_size":new.size(),"evidence_total":new.evidence_count,
                  "impacted_files":[m["path"] for m in new.impacted_files],"usage":usage,

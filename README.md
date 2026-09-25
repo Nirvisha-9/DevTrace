@@ -44,6 +44,9 @@ REAL WEB -> NIMBLE -> RAWTREE -> LIQUID AI STATE EDITOR -> RAWTREE TIMELINE -> N
 - **Recall** — when a new question overlaps older evidence, that evidence is brought back into the prompt.
 - **No repeated questions** — recent questions are tracked; repeats fall back to an open question.
 - **Code signals → impact** — the model extracts exact package/method/config names; the repo is downloaded once and scanned for them with file + line hits.
+- **Re-checks old beliefs** — every `VERIFY_EVERY` rounds (default 3) it re-verifies its oldest fact or change and records the outcome: still true, corrected, or unclear.
+- **Ask DevTrace** — ask a question in the dashboard; it answers from its summary and saved evidence, with sources, and can queue the question for the agent to research next round.
+- **One runner per topic** — a per-topic lock stops the dashboard and CLI from running the same topic at once.
 - **Timeline** — RawTree `devtrace_events` gets `question_selected`, `state_compacted` and `impact_detected` events per cycle, including Liquid model token usage.
 
 ## Setup

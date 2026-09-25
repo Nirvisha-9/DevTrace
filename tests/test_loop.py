@@ -116,16 +116,55 @@ def test_stale_needs_cited_reason_otherwise_rewording():
 def test_merge_stale_resolved_and_limits():
     from devtrace.agent.state_editor import StateEditor
     from devtrace.models.state import WorkingState
-    s=WorkingState(topic="t",active_facts=["old fact","keep fact"],open_questions=["q1?","q2?"],code_signals=["a"])
+    s=WorkingState(topic="t",active_facts=["old fact","keep fact"],open_questions=["q1?","q2?"],code_signals=["old_api"])
     new,dropped=StateEditor.merge(s,5,"q",{
         "new_facts":["keep fact","brand new [e1]"]+[f"f{i}" for i in range(20)],
         "stale":[{"id":"f1","because":"replaced by v2"}],"resolved":["Q2"],
-        "new_questions":["q1?"],"code_signals":["b","a"],"next_action":""})
+        "new_questions":["q1?"],"code_signals":["new_api","old_api"],"next_action":""})
     assert "old fact" not in new.active_facts and new.stale_claims==["old fact — superseded: replaced by v2"]
     assert len(new.active_facts)==12 and new.active_facts[-1]=="f19"      # capped, newest kept
     assert new.open_questions==["q1?"]                                    # resolved removed, duplicate ignored
     assert {d["reason"] for d in dropped}=={"stale","resolved","compacted"}
-    assert new.code_signals==["b","a"] and new.cycle==5
+    assert new.code_signals==["new_api","old_api"] and new.cycle==5
+
+def test_recheck_is_scheduled_and_outcome_recorded():
+    from devtrace.agent.state_editor import StateEditor
+    from devtrace.models.state import WorkingState
+    s=WorkingState(topic="stripe-python",cycle=5,active_facts=["old fact [aaaaaaaaaaaaaaaa]","fresh fact"],
+                   added={"old fact [aaaaaaaaaaaaaaaa]":1,"fresh fact":5})
+    plan=StateEditor(None).next_question(s)                       # round 6, VERIFY_EVERY=3 -> re-check
+    assert plan["kind"]=="recheck" and plan["verify"]=="old fact [aaaaaaaaaaaaaaaa]"
+    assert "[aaaa" not in plan["question"]
+    new,_=StateEditor.merge(s,6,plan["question"],{"confirmed":["F1"]},cited={"b"*16},verify=plan["verify"])
+    assert new.last_check["outcome"]=="confirmed" and new.checked["old fact [aaaaaaaaaaaaaaaa]"]==6
+    assert StateEditor.due_check(new,9) is None or StateEditor.due_check(new,9)=="fresh fact"
+    new2,d=StateEditor.merge(s,6,"q",{"stale":[{"id":"F1","because":"replaced in v16 ["+"b"*16+"]"}]},
+                             cited={"b"*16},verify="old fact [aaaaaaaaaaaaaaaa]")
+    assert new2.last_check["outcome"]=="corrected"
+
+def test_user_question_goes_first_and_is_consumed():
+    o=make(tempfile.mkdtemp())
+    o.ask_to_research("Does v15 break dict access?")
+    r=o.run_cycle()
+    assert r["summary"]["question"]=="Does v15 break dict access?" and r["summary"]["kind"]=="user"
+    assert o.state.inbox==[] and o.store.load_state().inbox==[]
+
+def test_new_items_tracked_and_prose_signals_dropped():
+    o=make(tempfile.mkdtemp()); o.run_cycle(); o.run_cycle()
+    s=o.state
+    assert all(c in (1,2) for c in s.added.values()) and 2 in s.added.values()
+    from devtrace.agent.state_editor import _signals
+    assert _signals(["description field removal","stripe.StripeObject","`one_time_fees`"])==["stripe.StripeObject","one_time_fees"]
+
+def test_second_runner_on_same_topic_is_refused():
+    tmp=tempfile.mkdtemp(); a=make(tmp); b=make(tmp)
+    held=a.store.try_lock()
+    try:
+        try: b.run_cycle(); assert False,"should refuse"
+        except RuntimeError as e: assert "already being run" in str(e)
+    finally: held.close()
+    b.run_cycle(); a.run_cycle()                     # a picks up b's round instead of forking history
+    assert a.state.cycle==2 and [c["cycle"] for c in a.store.cycles()]==[1,2]
 
 if __name__=="__main__":
     for k,v in list(globals().items()):
