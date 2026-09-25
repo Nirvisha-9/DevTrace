@@ -73,7 +73,7 @@ class GitHubClient:
             for s in signals:                       # e.g. a renamed file such as middleware.ts
                 if s.lower() in path.lower() and s not in used:
                     used.add(s); hits.insert(0,{"line":0,"signal":s,"code":"(file name matches)"})
-            if used: matches.append({"path":path,"signals":sorted(used),"hits":hits[:5]})
+            if used: matches.append({"path":path,"signals":sorted(used),"hits":hits[:5],"sha":self._sha})
         matches.sort(key=lambda m:(-len(m["signals"]),m["path"]))
         return {"enabled":True,"repo":GITHUB_REPO,"sha":self._sha,"files_scanned":len(self._files),
                 "matches":matches[:MAX_IMPACTED_FILES]}

@@ -5,511 +5,695 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DevTrace</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
   color-scheme:light;
-  --bg:#f6f6f4; --surface:#ffffff; --surface-2:#f1f1ee; --line:#e4e3de; --line-strong:#d3d2cc;
-  --text:#16161a; --text-2:#55545e; --muted:#8a8993;
-  --accent:#2a78d6; --accent-ink:#ffffff; --accent-soft:#e8f1fc;
+  --bg:#f4f5f9; --surface:#ffffff; --surface-2:#f6f7fb; --surface-3:#eef0f6; --line:#e6e8f0; --line-2:#d7dae5;
+  --text:#101322; --text-2:#4b5065; --muted:#8a8fa3;
+  --brand:#5b5bf7; --brand-2:#8b5cf6; --brand-soft:#eef0ff; --brand-ink:#4343d8;
   --series-1:#2a78d6; --series-2:#eb6834;
-  --good:#1a7f37; --good-soft:#e6f4ea; --warn:#9a6700; --warn-soft:#fff4d6;
-  --bad:#c93c37; --bad-soft:#fdecea; --info-soft:#eef2f8;
-  --shadow:0 1px 2px rgba(20,20,30,.04),0 4px 16px rgba(20,20,30,.05);
-  --radius:14px;
+  --blue:#2a78d6; --blue-soft:#e9f2fd;
+  --red:#d6453f; --red-soft:#fdeeed;
+  --amber:#b7791f; --amber-soft:#fdf5e4;
+  --green:#18864b; --green-soft:#e7f6ee;
+  --slate-soft:#eef0f5;
+  --shadow:0 1px 2px rgba(16,19,34,.04),0 8px 24px -8px rgba(16,19,34,.10);
+  --r:16px;
 }
 @media (prefers-color-scheme:dark){
   :root:where(:not([data-theme="light"])){
     color-scheme:dark;
-    --bg:#101012; --surface:#18181b; --surface-2:#1f1f23; --line:#2a2a2f; --line-strong:#38383f;
-    --text:#f4f4f5; --text-2:#b8b8c0; --muted:#7d7d88;
-    --accent:#3987e5; --accent-ink:#ffffff; --accent-soft:#16263b;
+    --bg:#0b0d15; --surface:#131623; --surface-2:#171b2a; --surface-3:#1d2233; --line:#252a3b; --line-2:#323850;
+    --text:#eef0f7; --text-2:#b3b8cc; --muted:#7c8299;
+    --brand:#7373ff; --brand-2:#a078ff; --brand-soft:#1d1f45; --brand-ink:#a9a9ff;
     --series-1:#3987e5; --series-2:#d95926;
-    --good:#4ac26b; --good-soft:#132a1b; --warn:#d4a72c; --warn-soft:#2b2412;
-    --bad:#e66767; --bad-soft:#2e1616; --info-soft:#1b2130;
-    --shadow:0 1px 2px rgba(0,0,0,.3);
+    --blue:#5aa0f0; --blue-soft:#14233a; --red:#f07470; --red-soft:#2f1719;
+    --amber:#e0a93f; --amber-soft:#2c2412; --green:#4cc27f; --green-soft:#12291d; --slate-soft:#1d2233;
+    --shadow:0 1px 0 rgba(255,255,255,.02),0 8px 24px -10px rgba(0,0,0,.6);
   }
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
-  --bg:#101012; --surface:#18181b; --surface-2:#1f1f23; --line:#2a2a2f; --line-strong:#38383f;
-  --text:#f4f4f5; --text-2:#b8b8c0; --muted:#7d7d88;
-  --accent:#3987e5; --accent-ink:#ffffff; --accent-soft:#16263b;
+  --bg:#0b0d15; --surface:#131623; --surface-2:#171b2a; --surface-3:#1d2233; --line:#252a3b; --line-2:#323850;
+  --text:#eef0f7; --text-2:#b3b8cc; --muted:#7c8299;
+  --brand:#7373ff; --brand-2:#a078ff; --brand-soft:#1d1f45; --brand-ink:#a9a9ff;
   --series-1:#3987e5; --series-2:#d95926;
-  --good:#4ac26b; --good-soft:#132a1b; --warn:#d4a72c; --warn-soft:#2b2412;
-  --bad:#e66767; --bad-soft:#2e1616; --info-soft:#1b2130;
-  --shadow:0 1px 2px rgba(0,0,0,.3);
+  --blue:#5aa0f0; --blue-soft:#14233a; --red:#f07470; --red-soft:#2f1719;
+  --amber:#e0a93f; --amber-soft:#2c2412; --green:#4cc27f; --green-soft:#12291d; --slate-soft:#1d2233;
+  --shadow:0 1px 0 rgba(255,255,255,.02),0 8px 24px -10px rgba(0,0,0,.6);
 }
 *{box-sizing:border-box}
-html,body{margin:0}
+html,body{margin:0;height:100%}
 body{background:var(--bg);color:var(--text);font:14px/1.55 Inter,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
-a{color:var(--accent);text-decoration:none}
-.wrap{max-width:1180px;margin:0 auto;padding:24px 20px 60px}
-code,.mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12.5px}
+a{color:var(--brand-ink);text-decoration:none}
+a:hover{text-decoration:underline}
+button{font:inherit}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
-/* header */
-.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
-.brand{display:flex;align-items:center;gap:12px}
-.logo{width:36px;height:36px;border-radius:10px;background:var(--accent);display:grid;place-items:center;color:#fff}
-.brand h1{font-size:18px;margin:0;letter-spacing:-.01em}
-.brand p{margin:0;color:var(--text-2);font-size:13px}
-.icon-btn{border:1px solid var(--line);background:var(--surface);color:var(--text-2);border-radius:10px;width:36px;height:36px;cursor:pointer;display:grid;place-items:center}
+/* ---------- layout ---------- */
+.app{display:grid;grid-template-columns:280px minmax(0,1fr);min-height:100vh}
+.side{background:var(--surface);border-right:1px solid var(--line);padding:20px 16px;display:flex;flex-direction:column;gap:20px;position:sticky;top:0;height:100vh;overflow:auto}
+.main{padding:28px 32px 60px;min-width:0;max-width:1240px;width:100%;margin:0 auto}
 
-/* cards */
-.card{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
-.pad{padding:18px 20px}
-.card h2{font-size:13px;font-weight:600;margin:0 0 2px;display:flex;align-items:center;gap:8px}
-.card .sub{color:var(--muted);font-size:12.5px;margin:0 0 12px}
-.count{margin-left:auto;font-size:12px;color:var(--muted);font-weight:500}
-
-/* controls */
-.controls{display:grid;grid-template-columns:minmax(0,1.4fr) 110px 120px auto;gap:10px;align-items:end}
-label.f{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--text-2);font-weight:500}
-input{font:inherit;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;min-width:0;width:100%}
-input:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
-.btns{display:flex;gap:8px;flex-wrap:wrap}
-button.b{font:inherit;font-weight:600;border-radius:10px;padding:9px 14px;border:1px solid var(--line-strong);background:var(--surface);color:var(--text);cursor:pointer;white-space:nowrap}
-button.b:hover{background:var(--surface-2)}
-button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-button.primary:hover{filter:brightness(1.07);background:var(--accent)}
-button.b:disabled{opacity:.45;cursor:not-allowed}
-details.adv{margin-top:10px}
-details.adv summary{cursor:pointer;color:var(--muted);font-size:12.5px}
+/* ---------- sidebar ---------- */
+.brand{display:flex;align-items:center;gap:10px;padding:0 6px}
+.logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--brand),var(--brand-2));display:grid;place-items:center;color:#fff;box-shadow:0 6px 16px -6px var(--brand)}
+.brand b{font-size:16px;letter-spacing:-.01em}
+.brand small{display:block;color:var(--muted);font-size:11.5px;margin-top:-2px}
+.sec-t{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:0 8px;margin-bottom:6px}
+.topics{display:flex;flex-direction:column;gap:2px}
+.topic{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;cursor:pointer;color:var(--text-2);border:1px solid transparent;background:none;text-align:left;width:100%}
+.topic:hover{background:var(--surface-2)}
+.topic.on{background:var(--brand-soft);color:var(--text);border-color:color-mix(in srgb,var(--brand) 25%,transparent)}
+.topic .nm{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topic .meta{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--line-2);flex:none}
+.dot.run{background:var(--green);box-shadow:0 0 0 3px color-mix(in srgb,var(--green) 25%,transparent)}
+.newt{display:flex;gap:6px}
+.field{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--text-2);font-weight:500}
+input{font:inherit;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;width:100%;min-width:0;transition:border-color .15s,box-shadow .15s}
+input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 18%,transparent)}
+.run-card{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font-weight:600;border-radius:10px;padding:9px 14px;border:1px solid var(--line-2);background:var(--surface);color:var(--text);cursor:pointer;white-space:nowrap;transition:transform .05s,background .15s,filter .15s}
+.btn:hover{background:var(--surface-3)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand-2));border-color:transparent;color:#fff;box-shadow:0 6px 16px -8px var(--brand)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{background:none;border-color:transparent;color:var(--text-2)}
+.btn.ghost:hover{background:var(--surface-3)}
+.btn.sm{padding:6px 10px;font-size:12.5px;border-radius:8px}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btns{display:flex;gap:8px}.btns .btn{flex:1}
+details.adv summary{cursor:pointer;color:var(--muted);font-size:12px}
 details.adv input{margin-top:8px}
+.side-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:12px;padding:0 6px}
 
-/* status banner */
-.status{display:flex;align-items:center;gap:12px;margin:14px 0 18px;padding:12px 16px;border-radius:12px;background:var(--info-soft);border:1px solid var(--line)}
-.status.run{background:var(--good-soft)}
-.status.err{background:var(--bad-soft)}
-.pulse{width:10px;height:10px;border-radius:50%;background:var(--muted);flex:none}
-.status.run .pulse{background:var(--good);box-shadow:0 0 0 0 var(--good);animation:p 1.6s infinite}
-.status.err .pulse{background:var(--bad)}
-@keyframes p{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--good) 60%,transparent)}100%{box-shadow:0 0 0 10px transparent}}
-.status b{font-weight:600}
-.status .detail{color:var(--text-2);overflow-wrap:anywhere}
+/* ---------- header ---------- */
+.head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.head h1{font-size:28px;letter-spacing:-.025em;margin:0;line-height:1.15;font-weight:800;overflow-wrap:anywhere}
+.head p{margin:4px 0 0;color:var(--text-2)}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;font-weight:600;font-size:13px;background:var(--slate-soft);color:var(--text-2);border:1px solid var(--line)}
+.pill.run{background:var(--green-soft);color:var(--green);border-color:color-mix(in srgb,var(--green) 30%,transparent)}
+.pill.err{background:var(--red-soft);color:var(--red)}
+.pill .dot{background:currentColor}
+.pill.run .dot{animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--green) 55%,transparent)}100%{box-shadow:0 0 0 9px transparent}}
 
-/* how it works */
-details.how{margin-bottom:18px}
-details.how summary{cursor:pointer;font-weight:600;font-size:13px;padding:14px 20px;list-style:none;display:flex;align-items:center;gap:8px}
-details.how summary::-webkit-details-marker{display:none}
-details.how summary .chev{transition:transform .15s;color:var(--muted)}
-details.how[open] summary .chev{transform:rotate(90deg)}
-.steps{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;padding:0 20px 18px}
-.step{background:var(--surface-2);border-radius:10px;padding:12px}
-.step .n{font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.04em}
-.step .t{font-weight:600;font-size:13px;margin:2px 0}
-.step .d{font-size:12px;color:var(--text-2)}
-.step.on{outline:2px solid var(--accent);background:var(--accent-soft)}
+.live{margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px 18px}
+.live-msg{display:flex;align-items:baseline;gap:10px;font-size:14px;overflow-wrap:anywhere;flex-wrap:wrap}
+.live-msg b{white-space:nowrap}
+.live-msg span{color:var(--text-2);min-width:0}
+.stepper{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin-top:14px}
+.st{position:relative;padding-top:12px;font-size:12px;color:var(--muted);font-weight:500}
+.st::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;border-radius:4px;background:var(--surface-3)}
+.st.done::before{background:color-mix(in srgb,var(--brand) 45%,transparent)}
+.st.on{color:var(--brand-ink);font-weight:700}
+.st.on::before{background:linear-gradient(90deg,var(--brand),var(--brand-2));animation:glow 1.4s ease-in-out infinite alternate}
+@keyframes glow{from{opacity:.55}to{opacity:1}}
+.st small{display:block;font-weight:400;color:var(--muted);font-size:11px;margin-top:1px}
 
-/* stats */
-.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:18px}
-.stat{padding:14px 16px}
-.stat .k{font-size:12px;color:var(--text-2);font-weight:500}
-.stat .v{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.2;margin-top:2px}
-.stat .h{font-size:11.5px;color:var(--muted)}
+/* ---------- tabs ---------- */
+.tabs{display:flex;gap:4px;margin:22px 0 18px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tab{display:inline-flex;align-items:center;gap:7px;padding:10px 14px;border:0;background:none;color:var(--text-2);font-weight:600;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tab:hover{color:var(--text)}
+.tab.on{color:var(--brand-ink);border-bottom-color:var(--brand)}
+.tab .n{font-size:11px;padding:1px 7px;border-radius:999px;background:var(--surface-3);color:var(--text-2)}
+.tab.on .n{background:var(--brand-soft);color:var(--brand-ink)}
+.panel{display:none;animation:fade .2s ease}
+.panel.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ---------- cards ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);min-width:0}
+.pad{padding:18px 20px}
+.ch{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.ch h3{font-size:14.5px;margin:0;font-weight:700;letter-spacing:-.005em}
+.ch .cnt{margin-left:auto;font-size:12px;color:var(--muted);font-weight:600}
+.ico{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:none}
+.ico.blue{background:var(--blue-soft);color:var(--blue)} .ico.red{background:var(--red-soft);color:var(--red)}
+.ico.amber{background:var(--amber-soft);color:var(--amber)} .ico.green{background:var(--green-soft);color:var(--green)}
+.ico.brand{background:var(--brand-soft);color:var(--brand-ink)} .ico.slate{background:var(--slate-soft);color:var(--text-2)}
+.sub{color:var(--muted);font-size:12.5px;margin:0 0 14px}
+.grid{display:grid;gap:18px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+.full{grid-column:1/-1}
+
+/* kpis */
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.kpi{padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.kpi .top{display:flex;align-items:center;justify-content:space-between;color:var(--text-2);font-size:12.5px;font-weight:600}
+.kpi .v{font-size:30px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.kpi .h{font-size:11.5px;color:var(--muted)}
+
+/* items */
+ul.items{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+ul.items li{padding:11px 13px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);font-size:13.5px;overflow-wrap:anywhere;position:relative}
+ul.items.blue li{border-left:3px solid var(--blue)}
+ul.items.red li{border-left:3px solid var(--red);background:color-mix(in srgb,var(--red-soft) 70%,var(--surface))}
+ul.items.amber li{border-left:3px solid var(--amber);background:color-mix(in srgb,var(--amber-soft) 70%,var(--surface))}
+ul.items.slate li{border-left:3px solid var(--line-2)}
+ul.items li.bare{padding:0;border:0;background:none}
+.empty{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;color:var(--muted);font-size:13px;padding:22px 10px;border:1px dashed var(--line-2);border-radius:12px}
+.empty svg{width:22px;height:22px;opacity:.7}
+.cite{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:6px;background:var(--brand-soft);color:var(--brand-ink);margin-left:5px;vertical-align:1px;white-space:nowrap}
+.cite:hover{text-decoration:none;filter:brightness(.95)}
+.badge{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.04em;padding:2px 7px;border-radius:999px;margin-right:6px;vertical-align:1px}
+.badge.new{background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff}
+.badge.ok{background:var(--green-soft);color:var(--green)}
+.was{color:var(--text-2);text-decoration:line-through;text-decoration-color:var(--amber)}
+.now{display:block;margin-top:5px;font-size:12.5px;color:var(--text)}
+.now b{color:var(--amber)}
+
+/* right-now card */
+.qbox{background:linear-gradient(135deg,var(--brand-soft),color-mix(in srgb,var(--brand-soft) 40%,var(--surface)));border:1px solid color-mix(in srgb,var(--brand) 20%,transparent);border-radius:12px;padding:13px 14px;font-weight:600;overflow-wrap:anywhere;font-size:14px}
+.kv{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.kv > div{font-size:13px;color:var(--text-2);padding:10px 12px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);overflow-wrap:anywhere}
+.kv b.k{color:var(--text);font-weight:700;display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.outcome{font-weight:700}
+.outcome.confirmed{color:var(--green)} .outcome.corrected{color:var(--amber)} .outcome.unclear,.outcome.reworded{color:var(--text-2)}
 
 /* chart */
-.chart-card{margin-bottom:18px}
-.legend{display:flex;gap:16px;font-size:12.5px;color:var(--text-2);margin-bottom:6px;flex-wrap:wrap}
-.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend{display:flex;gap:18px;font-size:12.5px;color:var(--text-2);margin:2px 0 8px;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:7px}
 .legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
 .chart-wrap{position:relative}
-svg#chart{width:100%;height:220px;display:block;overflow:visible}
+svg#chart{width:100%;height:230px;display:block;overflow:visible}
 svg#chart text{font:11.5px Inter,sans-serif;fill:var(--muted)}
-.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line-strong);box-shadow:var(--shadow);border-radius:10px;padding:8px 10px;font-size:12px;min-width:150px;display:none;z-index:2}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line-2);box-shadow:var(--shadow);border-radius:10px;padding:9px 11px;font-size:12px;min-width:160px;display:none;z-index:3}
 .tip .r{display:flex;align-items:center;gap:6px;justify-content:space-between}
 .tip .r i{width:8px;height:8px;border-radius:50%;display:inline-block}
-.empty-chart{color:var(--muted);font-size:13px;padding:40px 0;text-align:center}
 
-/* grid of panels */
-.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-bottom:18px}
-.col{display:flex;flex-direction:column;gap:18px;min-width:0}
-ul.items{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-ul.items li{padding:10px 12px;border-radius:10px;background:var(--surface-2);overflow-wrap:anywhere;font-size:13.5px}
-ul.items.change li{border-left:3px solid var(--accent)}
-ul.items.risk li{border-left:3px solid var(--bad);background:var(--bad-soft)}
-ul.items.stale li{border-left:3px solid var(--warn);background:var(--warn-soft)}
-ul.items.q li{border-left:3px solid var(--muted)}
-.none{color:var(--muted);font-size:13px;font-style:italic}
-.cite{display:inline-flex;align-items:center;font-family:"JetBrains Mono",monospace;font-size:10.5px;padding:1px 6px;border-radius:6px;background:var(--accent-soft);color:var(--accent);margin-left:4px;vertical-align:1px;white-space:nowrap}
-.was{color:var(--text-2);text-decoration:line-through;text-decoration-color:var(--warn)}
-.now{display:block;margin-top:4px;font-size:12.5px;color:var(--text)}
-.qbox{background:var(--accent-soft);border-radius:10px;padding:12px 14px;font-weight:500;overflow-wrap:anywhere}
-.next{margin-top:10px;font-size:13px;color:var(--text-2)}
-.next b{color:var(--text);font-weight:600}
-.file{padding:10px 12px;border-radius:10px;background:var(--surface-2);margin-bottom:8px}
-.file .p{font-family:"JetBrains Mono",monospace;font-size:12.5px;font-weight:500;overflow-wrap:anywhere}
-.file .l{font-family:"JetBrains Mono",monospace;font-size:11.5px;color:var(--text-2);margin-top:3px;overflow-wrap:anywhere}
-.tag{display:inline-block;max-width:100%;overflow-wrap:anywhere;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--text-2);border:1px solid var(--line)}
-.signals{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+/* code tab */
+.repo{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);margin-bottom:14px}
+.repo .nm{font-weight:700}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{display:inline-block;font:500 11.5px "JetBrains Mono",monospace;padding:3px 8px;border-radius:7px;background:var(--surface-3);color:var(--text-2);border:1px solid var(--line);max-width:100%;overflow-wrap:anywhere}
+.file{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.file + .file{margin-top:10px}
+.file .fh{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface-2);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.file .fp{font:600 12.5px "JetBrains Mono",monospace;overflow-wrap:anywhere;flex:1;min-width:0}
+.file .ln{display:flex;gap:12px;padding:7px 14px;font:12px/1.6 "JetBrains Mono",monospace;border-top:1px solid var(--line);color:var(--text-2);overflow-wrap:anywhere}
+.file .fh + .ln{border-top:0}
+.file .ln a{color:var(--muted);min-width:44px;text-align:right;flex:none}
+.file .ln code{flex:1;min-width:0;white-space:pre-wrap}
+.note{font-size:12px;color:var(--muted);margin-top:12px;display:flex;gap:6px;align-items:flex-start}
 
-/* table + log */
-.tbl{width:100%;border-collapse:collapse;font-size:13px}
-.tbl th{text-align:left;font-weight:500;color:var(--muted);font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line)}
-.tbl td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
-.tbl td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
-.tbl tr:last-child td{border-bottom:0}
-.scroll{overflow-x:auto}
-details.more{margin-top:18px}
-details.more summary{cursor:pointer;font-weight:600;font-size:13px;padding:14px 20px}
-.more-body{padding:0 20px 18px}
-.reason{font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;margin-right:6px;white-space:nowrap}
-.reason.stale{background:var(--warn-soft);color:var(--warn)}
-.reason.merged,.reason.compacted{background:var(--surface-2);color:var(--text-2)}
-.reason.resolved{background:var(--good-soft);color:var(--good)}
-pre.log{margin:0;max-height:260px;overflow:auto;font:12px/1.6 "JetBrains Mono",monospace;color:var(--text-2);white-space:pre-wrap;background:var(--surface-2);border-radius:10px;padding:12px}
-.ask-row{display:flex;gap:8px}
-.ask-row input{flex:1}
-.answer{margin-top:14px;padding:14px 16px;border-radius:12px;background:var(--surface-2);display:none}
-.answer .txt{font-size:14px;line-height:1.6;overflow-wrap:anywhere}
-.answer .meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
-.conf{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px}
-.conf.high{background:var(--good-soft);color:var(--good)} .conf.medium{background:var(--info-soft);color:var(--accent)} .conf.low{background:var(--warn-soft);color:var(--warn)}
-.srcs{display:flex;flex-direction:column;gap:4px;margin-top:10px;font-size:12.5px}
-.srcs a{overflow-wrap:anywhere}
-.hint{font-size:12px;color:var(--muted);margin-top:8px}
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.chip{font:inherit;font-size:12px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);color:var(--text-2);cursor:pointer}
-.chip:hover{border-color:var(--accent);color:var(--accent)}
-.badge{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.03em;padding:1px 7px;border-radius:999px;margin-right:6px;vertical-align:1px}
-.badge.new{background:var(--accent);color:#fff}
-.badge.ok{background:var(--good-soft);color:var(--good)}
-.kind{display:inline-block;font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:999px;margin-bottom:4px}
-.kind.recheck{background:var(--good-soft);color:var(--good)} .kind.user{background:var(--accent-soft);color:var(--accent)}
-.kind.corrected{background:var(--warn-soft);color:var(--warn)}
-.check{margin-top:10px;font-size:12.5px;color:var(--text-2);padding:8px 10px;border-radius:8px;background:var(--surface-2)}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:13px;box-shadow:var(--shadow);display:none;z-index:9;max-width:90vw}
-.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--line-strong);border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px;margin-right:6px}
-@keyframes sp{to{transform:rotate(360deg)}}
-.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+/* ask */
+.chat{display:flex;flex-direction:column;gap:14px;min-height:220px;max-height:560px;overflow:auto;padding:4px 2px 8px}
+.msg{max-width:85%;padding:12px 14px;border-radius:14px;font-size:14px;line-height:1.6;overflow-wrap:anywhere}
+.msg.me{align-self:flex-end;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;border-bottom-right-radius:4px}
+.msg.bot{align-self:flex-start;background:var(--surface-2);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg .srcs{margin-top:10px;display:flex;flex-direction:column;gap:3px;font-size:12.5px}
+.msg .foot{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.conf{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+.conf.high{background:var(--green-soft);color:var(--green)} .conf.medium{background:var(--blue-soft);color:var(--blue)} .conf.low{background:var(--amber-soft);color:var(--amber)}
+.composer{display:flex;gap:8px;margin-top:12px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.chip{font-size:12.5px;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--text-2);cursor:pointer;text-align:left}
+.chip:hover{border-color:var(--brand);color:var(--brand-ink)}
+.typing{display:inline-flex;gap:4px}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:bl 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes bl{0%,80%,100%{opacity:.25}40%{opacity:1}}
 
-@media (max-width:900px){
-  .steps{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .grid,.two{grid-template-columns:minmax(0,1fr)}
+/* history */
+.tl{position:relative;padding-left:26px}
+.tl::before{content:"";position:absolute;left:9px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.ev{position:relative;padding:0 0 18px}
+.ev::before{content:"";position:absolute;left:-22px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:3px solid var(--brand)}
+.ev.recheck::before{border-color:var(--green)} .ev.user::before{border-color:var(--blue)} .ev.corrected::before{border-color:var(--amber)}
+.ev .t{font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ev .q{font-weight:600;margin:3px 0 4px;overflow-wrap:anywhere}
+.ev .s{font-size:12px;color:var(--text-2);display:flex;gap:14px;flex-wrap:wrap}
+.kind{font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:999px}
+.kind.recheck{background:var(--green-soft);color:var(--green)} .kind.user{background:var(--blue-soft);color:var(--blue)}
+.kind.corrected{background:var(--amber-soft);color:var(--amber)} .kind.auto{background:var(--slate-soft);color:var(--text-2)}
+.warn{color:var(--red);font-size:12px;margin-top:4px}
+.reason{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;margin-right:6px;white-space:nowrap;text-transform:capitalize}
+.reason.stale{background:var(--amber-soft);color:var(--amber)} .reason.resolved{background:var(--green-soft);color:var(--green)}
+.reason.merged,.reason.compacted{background:var(--slate-soft);color:var(--text-2)}
+pre.log{margin:0;max-height:320px;overflow:auto;font:12px/1.6 "JetBrains Mono",monospace;color:var(--text-2);white-space:pre-wrap;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px}
+.link{background:none;border:0;color:var(--brand-ink);font-weight:600;cursor:pointer;padding:0}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:11px 16px;border-radius:12px;font-size:13px;box-shadow:var(--shadow);display:none;z-index:20;max-width:90vw}
+
+/* welcome */
+.welcome{text-align:center;padding:60px 20px}
+.welcome .logo{width:56px;height:56px;border-radius:16px;margin:0 auto 16px}
+.welcome h2{font-size:24px;margin:0 0 6px;letter-spacing:-.02em}
+.welcome p{color:var(--text-2);max-width:520px;margin:0 auto 18px}
+.welcome .chips{justify-content:center}
+
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.g3{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}
+  .main{padding:20px 16px 48px}
+  .g2{grid-template-columns:minmax(0,1fr)}
+  .stepper{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:12px}
 }
-@media (max-width:620px){
-  .wrap{padding:16px 16px 40px}
-  .controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-  .controls .topic,.controls .btns{grid-column:1/-1}
-  .btns button{flex:1}
-  .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .stat .v{font-size:24px}
-  .brand p{display:none}
-}
+@media (max-width:520px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.head h1{font-size:23px}.msg{max-width:95%}}
 </style>
 </head>
 <body>
-<div class="wrap">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 5v14l11-7z"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5V21h16"/></symbol>
+  <symbol id="i-focus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/></symbol>
+  <symbol id="i-archive" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15 6.7L3 16M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5M3 21v-5h5"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></symbol>
+  <symbol id="i-git" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="9" r="3"/><path d="M6 9v6M18 12a6 6 0 0 1-6 6H9"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+</svg>
+<div class="app">
 
-  <header class="top">
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="side">
     <div class="brand">
-      <div class="logo" aria-hidden="true">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/><path d="M8 11h6M11 8v6"/></svg>
-      </div>
-      <div>
-        <h1>DevTrace</h1>
-        <p>An agent that keeps watching a library for changes and tells you what could break your code.</p>
-      </div>
+      <div class="logo"><svg class="i" style="width:18px;height:18px"><use href="#i-search"/></svg></div>
+      <div><b>DevTrace</b><small>Library change watcher</small></div>
     </div>
-    <button class="icon-btn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
-    </button>
-  </header>
 
-  <section class="card pad">
-    <div class="controls">
-      <label class="f topic">Library to watch
-        <input id="topic" list="topics" placeholder="e.g. stripe-python" autocomplete="off">
-        <datalist id="topics"></datalist>
-      </label>
-      <label class="f" title="Leave blank to run until you press Stop">Rounds
-        <input id="cycles" type="number" min="1" placeholder="∞">
-      </label>
-      <label class="f" title="Pause between rounds">Pause (sec)
-        <input id="interval" type="number" min="0" value="30">
-      </label>
+    <div>
+      <div class="sec-t">Libraries</div>
+      <div class="topics" id="topicList"></div>
+    </div>
+
+    <form class="newt" onsubmit="event.preventDefault();addTopic()">
+      <input id="newTopic" placeholder="Watch a library… e.g. next.js" autocomplete="off">
+      <button class="btn sm" title="Add"><svg class="i"><use href="#i-plus"/></svg></button>
+    </form>
+
+    <div class="run-card">
+      <div class="sec-t" style="padding:0;margin:0">Run the agent</div>
+      <div class="row2">
+        <label class="field" title="Leave blank to keep running until you press Stop">Rounds<input id="cycles" type="number" min="1" placeholder="∞"></label>
+        <label class="field" title="Pause between rounds">Pause (sec)<input id="interval" type="number" min="0" value="20"></label>
+      </div>
       <div class="btns">
-        <button class="b primary" id="startBtn" onclick="start()">Start</button>
-        <button class="b" id="stopBtn" onclick="stop()">Stop</button>
-        <button class="b" id="resetBtn" onclick="reset()" title="Start over from a fresh state (saved evidence in RawTree is kept)">Reset</button>
+        <button class="btn primary" id="startBtn" onclick="start()"><svg class="i"><use href="#i-play"/></svg>Start</button>
+        <button class="btn" id="stopBtn" onclick="stop()"><svg class="i"><use href="#i-stop"/></svg>Stop</button>
       </div>
+      <details class="adv"><summary>Give it a first question (optional)</summary>
+        <input id="q" placeholder="Leave empty to let the agent decide">
+      </details>
+      <button class="btn ghost sm" id="resetBtn" onclick="reset()" title="Start this library over (saved pages in RawTree are kept)"><svg class="i"><use href="#i-reset"/></svg>Start over</button>
     </div>
-    <details class="adv"><summary>Advanced: give it a first question</summary>
-      <input id="q" placeholder="Optional. Leave empty to let the agent decide (recommended).">
-    </details>
-  </section>
 
-  <div class="status" id="status"><span class="pulse"></span><div><b id="statusTitle">Idle</b> <span class="detail" id="statusDetail">Pick a library and press Start.</span></div></div>
-
-  <section class="card pad" style="margin-bottom:18px">
-    <h2>Ask DevTrace</h2>
-    <p class="sub">Ask about the library. It answers from what it has already read, with sources. No new search.</p>
-    <div class="ask-row">
-      <input id="askq" placeholder="e.g. Will upgrading to v15 break code that treats StripeObject like a dict?" onkeydown="if(event.key==='Enter')ask()">
-      <button class="b primary" id="askBtn" onclick="ask()">Ask</button>
+    <div class="side-foot">
+      <span>Liquid AI · Nimble · RawTree</span>
+      <button class="btn ghost sm" id="theme" title="Light / dark"><svg class="i"><use href="#i-moon"/></svg></button>
     </div>
-    <div class="chips" id="suggest"></div>
-    <div class="answer" id="answer">
-      <div class="txt" id="answerTxt"></div>
-      <div class="srcs" id="answerSrc"></div>
-      <div class="meta"><span class="conf" id="answerConf"></span>
-        <button class="b" id="researchBtn" onclick="research()" title="The agent will investigate this in its next round">Research this next round</button></div>
-      <div class="hint" id="answerHint"></div>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <main class="main">
+    <div id="welcome" class="welcome" style="display:none">
+      <div class="logo"><svg class="i" style="width:26px;height:26px"><use href="#i-search"/></svg></div>
+      <h2>Watch a library for changes</h2>
+      <p>DevTrace keeps reading release notes, docs and migration guides for a library, keeps a short up-to-date summary, and shows which files in your repo to review.</p>
+      <div class="chips"><button class="chip" onclick="pick('next.js')">next.js</button><button class="chip" onclick="pick('stripe-python')">stripe-python</button><button class="chip" onclick="pick('react')">react</button><button class="chip" onclick="pick('pandas')">pandas</button></div>
     </div>
-  </section>
 
-  <details class="how card" id="how">
-    <summary><span class="chev">▶</span> How it works: one round, repeated</summary>
-    <div class="steps">
-      <div class="step" data-s="ask"><div class="n">1</div><div class="t">Decide</div><div class="d">Picks the most useful thing to look into next.</div></div>
-      <div class="step" data-s="search"><div class="n">2</div><div class="t">Search</div><div class="d">Reads live release notes, docs and migration guides (Nimble).</div></div>
-      <div class="step" data-s="save"><div class="n">3</div><div class="t">Remember</div><div class="d">Saves every page permanently (RawTree).</div></div>
-      <div class="step" data-s="think"><div class="n">4</div><div class="t">Update</div><div class="d">Rewrites a short summary and corrects outdated beliefs (Liquid AI).</div></div>
-      <div class="step" data-s="code"><div class="n">5</div><div class="t">Check code</div><div class="d">Looks for affected files in your repo (GitHub).</div></div>
-      <div class="step" data-s="wait"><div class="n">6</div><div class="t">Repeat</div><div class="d">Moves on to a new open question.</div></div>
+    <div id="dash">
+      <header class="head">
+        <div style="min-width:0">
+          <h1 id="title">—</h1>
+          <p id="subtitle"></p>
+        </div>
+        <span class="pill" id="pill"><span class="dot"></span><span id="pillTxt">Idle</span></span>
+      </header>
+
+      <section class="live">
+        <div class="live-msg"><b id="liveTitle">Idle</b><span id="liveDetail"></span></div>
+        <div class="stepper">
+          <div class="st" data-s="ask">Decide<small>what to look into</small></div>
+          <div class="st" data-s="search">Search<small>live web · Nimble</small></div>
+          <div class="st" data-s="save">Remember<small>every page · RawTree</small></div>
+          <div class="st" data-s="think">Update<small>summary · Liquid AI</small></div>
+          <div class="st" data-s="code">Check code<small>your repo · GitHub</small></div>
+          <div class="st" data-s="wait">Repeat<small>next open question</small></div>
+        </div>
+      </section>
+
+      <nav class="tabs" id="tabs">
+        <button class="tab" data-t="overview"><svg class="i"><use href="#i-grid"/></svg>Overview</button>
+        <button class="tab" data-t="findings"><svg class="i"><use href="#i-layers"/></svg>Findings <span class="n" id="nFind">0</span></button>
+        <button class="tab" data-t="code"><svg class="i"><use href="#i-code"/></svg>Your code <span class="n" id="nCode">0</span></button>
+        <button class="tab" data-t="ask"><svg class="i"><use href="#i-chat"/></svg>Ask</button>
+        <button class="tab" data-t="history"><svg class="i"><use href="#i-clock"/></svg>History</button>
+      </nav>
+
+      <!-- OVERVIEW -->
+      <section class="panel" id="p-overview">
+        <div class="kpis">
+          <div class="card kpi"><div class="top">Rounds<span class="ico brand"><svg class="i"><use href="#i-refresh"/></svg></span></div><div class="v" id="kRounds">0</div><div class="h">run on its own</div></div>
+          <div class="card kpi"><div class="top">Pages read<span class="ico blue"><svg class="i"><use href="#i-book"/></svg></span></div><div class="v" id="kPages">0</div><div class="h">all kept in RawTree</div></div>
+          <div class="card kpi"><div class="top">In focus<span class="ico amber"><svg class="i"><use href="#i-focus"/></svg></span></div><div class="v" id="kFocus">0</div><div class="h">items in its summary</div></div>
+          <div class="card kpi"><div class="top">Archived<span class="ico slate"><svg class="i"><use href="#i-archive"/></svg></span></div><div class="v" id="kArch">0</div><div class="h">moved out, never deleted</div></div>
+          <div class="card kpi"><div class="top">Files to review<span class="ico red"><svg class="i"><use href="#i-code"/></svg></span></div><div class="v" id="kFiles">0</div><div class="h" id="kFilesH">in your repo</div></div>
+        </div>
+
+        <div class="grid g3">
+          <div class="card pad">
+            <div class="ch"><span class="ico blue"><svg class="i"><use href="#i-layers"/></svg></span><h3>Knowledge grows, focus stays small</h3></div>
+            <p class="sub">Everything it reads is kept, but the summary it works from stays compact, so it can keep going for weeks.</p>
+            <div class="legend"><span><i style="background:var(--series-1)"></i>Pages read (total)</span><span><i style="background:var(--series-2)"></i>Items in focus</span></div>
+            <div class="chart-wrap"><svg id="chart" role="img" aria-label="Pages read versus items in focus per round"></svg><div class="tip" id="tip"></div></div>
+          </div>
+          <div class="card pad">
+            <div class="ch"><span class="ico brand"><svg class="i"><use href="#i-search"/></svg></span><h3>Right now</h3></div>
+            <p class="sub">What the agent chose to investigate.</p>
+            <div class="qbox" id="question">Nothing yet</div>
+            <div class="kv" id="nowKv"></div>
+          </div>
+          <div class="card pad full">
+            <div class="ch"><span class="ico red"><svg class="i"><use href="#i-alert"/></svg></span><h3>Latest findings</h3><button class="link" style="margin-left:auto" onclick="tab('findings')">See all →</button></div>
+            <p class="sub">The newest changes it confirmed and what they could break.</p>
+            <div class="grid g2"><ul class="items blue" id="ovChanges"></ul><ul class="items red" id="ovRisks"></ul></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FINDINGS -->
+      <section class="panel" id="p-findings">
+        <div class="grid g2">
+          <div class="card pad"><div class="ch"><span class="ico blue"><svg class="i"><use href="#i-layers"/></svg></span><h3>What changed</h3><span class="cnt" id="cChanges"></span></div>
+            <p class="sub">Releases, removals, renames and migrations it confirmed.</p><ul class="items blue" id="changes"></ul></div>
+          <div class="card pad"><div class="ch"><span class="ico red"><svg class="i"><use href="#i-alert"/></svg></span><h3>What could break</h3><span class="cnt" id="cRisks"></span></div>
+            <p class="sub">How these changes could affect code that uses the library.</p><ul class="items red" id="risks"></ul></div>
+          <div class="card pad"><div class="ch"><span class="ico green"><svg class="i"><use href="#i-check"/></svg></span><h3>Key facts</h3><span class="cnt" id="cFacts"></span></div>
+            <p class="sub">What it currently believes, each with a source.</p><ul class="items" id="facts"></ul></div>
+          <div class="card pad"><div class="ch"><span class="ico slate"><svg class="i"><use href="#i-help"/></svg></span><h3>Still to find out</h3><span class="cnt" id="cOpen"></span></div>
+            <p class="sub">Open questions it will investigate in later rounds.</p><ul class="items slate" id="open"></ul></div>
+          <div class="card pad full"><div class="ch"><span class="ico amber"><svg class="i"><use href="#i-edit"/></svg></span><h3>Corrected beliefs</h3><span class="cnt" id="cStale"></span></div>
+            <p class="sub">Things it believed earlier that newer evidence proved wrong, and what replaced them.</p><ul class="items amber" id="stale"></ul></div>
+        </div>
+      </section>
+
+      <!-- CODE -->
+      <section class="panel" id="p-code">
+        <div class="card pad">
+          <div class="ch"><span class="ico red"><svg class="i"><use href="#i-code"/></svg></span><h3>Files to review</h3><span class="cnt" id="cFiles"></span></div>
+          <p class="sub">Files in your repo that mention the code affected by these changes.</p>
+          <div id="repoBox"></div>
+          <div id="impact"></div>
+          <div class="note"><svg class="i"><use href="#i-help"/></svg><span>Matched by name, so a file listed here uses the affected API but may not actually break. Open the line to check.</span></div>
+        </div>
+      </section>
+
+      <!-- ASK -->
+      <section class="panel" id="p-ask">
+        <div class="card pad">
+          <div class="ch"><span class="ico brand"><svg class="i"><use href="#i-chat"/></svg></span><h3>Ask DevTrace</h3></div>
+          <p class="sub">Answers come from what the agent has already read, with sources. If it doesn't know, send the question to the agent to research next round.</p>
+          <div class="chat" id="chat"></div>
+          <div class="chips" id="suggest"></div>
+          <form class="composer" onsubmit="event.preventDefault();ask()">
+            <input id="askq" placeholder="e.g. What could break if I upgrade?" autocomplete="off">
+            <button class="btn primary" id="askBtn"><svg class="i"><use href="#i-send"/></svg>Ask</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- HISTORY -->
+      <section class="panel" id="p-history">
+        <div class="grid g2">
+          <div class="card pad">
+            <div class="ch"><span class="ico brand"><svg class="i"><use href="#i-clock"/></svg></span><h3>Rounds</h3><span class="cnt" id="cRounds"></span></div>
+            <p class="sub">Each round the agent ran on its own, newest first.</p>
+            <div class="tl" id="timeline"></div>
+          </div>
+          <div class="grid" style="align-content:start">
+            <div class="card pad">
+              <div class="ch"><span class="ico slate"><svg class="i"><use href="#i-archive"/></svg></span><h3>Archive</h3></div>
+              <p class="sub">What left the summary: reworded, answered, corrected or trimmed. Nothing is deleted.</p>
+              <ul class="items" id="arch"></ul>
+            </div>
+            <div class="card pad">
+              <div class="ch"><span class="ico slate"><svg class="i"><use href="#i-book"/></svg></span><h3>Activity log</h3></div>
+              <p class="sub">Raw log from this session.</p>
+              <pre class="log" id="log">No activity yet.</pre>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
-  </details>
-
-  <section class="stats">
-    <div class="card stat"><div class="k">Rounds</div><div class="v" id="sRounds">0</div><div class="h">investigations so far</div></div>
-    <div class="card stat"><div class="k">Pages read</div><div class="v" id="sPages">0</div><div class="h">all kept in RawTree</div></div>
-    <div class="card stat"><div class="k">In focus</div><div class="v" id="sFocus">0</div><div class="h">items in the summary</div></div>
-    <div class="card stat"><div class="k">Archived</div><div class="v" id="sArch">0</div><div class="h">moved out, never deleted</div></div>
-    <div class="card stat"><div class="k">Files to review</div><div class="v" id="sFiles">0</div><div class="h" id="sFilesH">in your repo</div></div>
-  </section>
-
-  <section class="card pad chart-card">
-    <h2>Knowledge grows, focus stays small</h2>
-    <p class="sub">Everything it reads is kept, but the summary it works from stays compact, so it can run for weeks.</p>
-    <div class="legend"><span><i style="background:var(--series-1)"></i>Pages read (total)</span><span><i style="background:var(--series-2)"></i>Items in focus</span></div>
-    <div class="chart-wrap"><svg id="chart" role="img" aria-label="Pages read versus items in focus per round"></svg><div class="tip" id="tip"></div></div>
-  </section>
-
-  <section class="grid">
-    <div class="col">
-      <div class="card pad">
-        <h2>Investigating now</h2>
-        <p class="sub">The question the agent chose for this round.</p>
-        <div class="qbox" id="question">Nothing yet</div>
-        <div class="next" id="next"></div>
-        <div id="lastCheck"></div>
-        <div id="inbox"></div>
-      </div>
-      <div class="card pad">
-        <h2>What changed <span class="count" id="cChanges"></span></h2>
-        <p class="sub">Releases, removals, renames and migrations it has confirmed.</p>
-        <ul class="items change" id="changes"></ul>
-      </div>
-      <div class="card pad">
-        <h2>Key facts <span class="count" id="cFacts"></span></h2>
-        <p class="sub">What it currently believes, with sources.</p>
-        <ul class="items" id="facts"></ul>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card pad">
-        <h2>What could break <span class="count" id="cRisks"></span></h2>
-        <p class="sub">How these changes could affect code that uses the library.</p>
-        <ul class="items risk" id="risks"></ul>
-      </div>
-      <div class="card pad">
-        <h2>Files to review</h2>
-        <p class="sub" id="impactSub">Files in your repo that mention the affected code. Matched by name, so check each one.</p>
-        <div id="impact"></div>
-      </div>
-      <div class="card pad">
-        <h2>Still to find out <span class="count" id="cOpen"></span></h2>
-        <p class="sub">Open questions it will investigate in later rounds.</p>
-        <ul class="items q" id="open"></ul>
-      </div>
-      <div class="card pad">
-        <h2>Corrected beliefs <span class="count" id="cStale"></span></h2>
-        <p class="sub">Things it believed earlier that newer evidence proved wrong.</p>
-        <ul class="items stale" id="stale"></ul>
-      </div>
-    </div>
-  </section>
-
-  <section class="card pad">
-    <h2>Rounds</h2>
-    <p class="sub">Each row is one round the agent ran on its own.</p>
-    <div class="scroll"><table class="tbl" id="rounds"></table></div>
-  </section>
-
-  <details class="more card">
-    <summary>Archive &amp; activity log</summary>
-    <div class="more-body two">
-      <div><p class="sub">Items that left the summary: merged (reworded), resolved, corrected or trimmed. All kept.</p><ul class="items" id="arch"></ul></div>
-      <div><p class="sub">Raw agent log.</p><pre class="log" id="log">No activity yet.</pre></div>
-    </div>
-  </details>
-
+  </main>
 </div>
 <div class="toast" id="toast"></div>
+
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let topic='', sources={}, lastData=null;
+const ico=(n,s='')=>`<svg class="i" ${s}><use href="#i-${n}"/></svg>`;
+const store={get(k,d){try{return localStorage.getItem(k)??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const slug=t=>String(t).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+let topic=store.get('dt-topic',''), sources={}, lastData=null, chat=[], pendingNew=null;
 
-// theme toggle (remembered per browser)
-try{const t=localStorage.getItem('dt-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}
-$('theme').onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
-  const t=dark?'light':'dark';document.documentElement.dataset.theme=t;try{localStorage.setItem('dt-theme',t)}catch(e){};if(lastData)chart(lastData.cycles)};
-try{if(localStorage.getItem('dt-how')!=='closed')$('how').open=true}catch(e){$('how').open=true}
-$('how').addEventListener('toggle',()=>{try{localStorage.setItem('dt-how',$('how').open?'open':'closed')}catch(e){}});
+/* ---------- theme ---------- */
+(()=>{const t=store.get('dt-theme','');if(t)document.documentElement.dataset.theme=t})();
+$('theme').onclick=()=>{const cur=document.documentElement.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  const t=cur==='dark'?'light':'dark';document.documentElement.dataset.theme=t;store.set('dt-theme',t);if(lastData)chart(lastData.cycles)};
 
-// turn [evidence_id] into source links
+/* ---------- tabs ---------- */
+function tab(t){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id==='p-'+t));store.set('dt-tab',t);if(t==='overview'&&lastData)chart(lastData.cycles)}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>tab(b.dataset.t));
+(()=>{const h=new URLSearchParams(location.hash.slice(1));if(h.get('topic')){topic=h.get('topic');store.set('dt-topic',topic)}
+  tab(h.get('tab')||store.get('dt-tab','overview'))})();
+
+/* ---------- text helpers ---------- */
+const tidy=t=>String(t??'').replace(/\s*\[[A-Z]\d+\]/g,'').replace(/\s+-\s+need to .*$/i,'')
+  .replace(/\s*\((already in (state|active_\w+)[^)]*|confirmed|superseded[^)]*|see [A-Z]\d+[^)]*)\)/gi,'')
+  .replace(/\[((?:[0-9a-f]{16}\s*,\s*)+[0-9a-f]{16})\]/g,(m,ids)=>ids.split(/\s*,\s*/).map(i=>'['+i+']').join(' ')).trim();
+const noCites=t=>String(t??'').replace(/\s*\[[0-9a-f]{16}\]/g,'');
 function rich(t){
-  t=String(t??'').replace(/\s*\[[A-Z]\d+\]/g,'').replace(/\s+-\s+need to .*$/i,'');   // tidy internal ids from older rounds
-  return esc(t).replace(/\s*\[([0-9a-f]{16})\]/g,(m,id)=>{const s=sources[id];
-    return s&&s.url?` <a class="cite" href="${esc(s.url)}" target="_blank" rel="noopener" title="${esc(s.title)}">source</a>`:` <span class="cite" title="evidence ${id}">source</span>`});
+  return esc(tidy(t)).replace(/\s*\[([0-9a-f]{16})\]/g,(m,id)=>{const s=sources[id];
+    return s&&s.url?` <a class="cite" href="${esc(s.url)}" target="_blank" rel="noopener" title="${esc(s.title)}">${ico('ext','style="width:10px;height:10px"')}source</a>`:` <span class="cite" title="evidence ${id}">source</span>`});
 }
-function badges(x){
-  const s=lastData&&lastData.state; if(!s)return '';
-  let b=''; if(s.cycle&&s.added&&s.added[x]===s.cycle)b+='<span class="badge new">NEW</span>';
-  if(s.checked&&s.checked[x])b+=`<span class="badge ok">✓ re-checked r${s.checked[x]}</span>`;
-  return b;
-}
-function list(id,xs,cid,render){
-  $(id).innerHTML=(xs&&xs.length)?xs.slice().reverse().map(x=>'<li>'+badges(x)+(render?render(x):rich(x))+'</li>').join(''):'<li class="none" style="background:none;border:0;padding:0">Nothing yet</li>';
+function badges(x){const s=lastData&&lastData.state;if(!s)return'';let b='';
+  if(s.cycle&&s.added&&s.added[x]===s.cycle)b+='<span class="badge new">NEW</span>';
+  if(s.checked&&s.checked[x])b+=`<span class="badge ok">✓ RE-CHECKED R${s.checked[x]}</span>`;return b}
+function emptyBox(icon,text){return `<div class="empty">${ico(icon)}<div>${text}</div></div>`}
+function list(id,xs,cid,render,emptyText,limit){
+  const arr=(xs||[]).slice().reverse().slice(0,limit||99);
+  $(id).innerHTML=arr.length?arr.map(x=>'<li>'+badges(x)+(render?render(x):rich(x))+'</li>').join(''):`<li class="bare">${emptyBox('clock',emptyText||'Nothing yet. Run a few rounds.')}</li>`;
   if(cid)$(cid).textContent=xs&&xs.length?xs.length:'';
 }
-
-let lastAsked='';
 function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',3500)}
-async function ask(q){
-  topic=$('topic').value.trim(); q=(q||$('askq').value).trim(); if(!topic||!q)return;
-  $('askq').value=q; lastAsked=q; const btn=$('askBtn'); btn.disabled=true;
-  $('answer').style.display='block';
-  $('answerTxt').innerHTML='<span class="spin"></span>Thinking'+(lastData&&lastData.running?' (the agent is mid-round, so this may take up to a minute)…':'…');
-  $('answerSrc').innerHTML='';$('answerConf').textContent='';$('answerConf').className='conf';$('answerHint').textContent='';
-  try{
-    const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic,question:q})});
-    const d=await r.json(); if(!r.ok)throw new Error(d.detail||'failed');
-    Object.assign(sources,d.sources||{});
-    $('answerTxt').innerHTML=rich(d.answer);
-    const src=Object.entries(d.sources||{});
-    $('answerSrc').innerHTML=src.length?'<div style="color:var(--muted);font-size:12px">Sources</div>'+src.map(([id,x])=>`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title||x.url)}</a>`).join(''):'';
-    $('answerConf').textContent=d.confidence+' confidence'; $('answerConf').className='conf '+d.confidence;
-    $('answerHint').textContent=d.answered?'Want fresher info? Send it to the agent to research.':'Not covered yet. Send it to the agent and it will research this next round.';
-  }catch(e){$('answerTxt').textContent='Could not answer: '+e.message}
-  btn.disabled=false;
+
+/* ---------- topics ---------- */
+function pick(t){topic=t;store.set('dt-topic',t);chat=[];renderChat();refresh()}
+function addTopic(){const t=$('newTopic').value.trim();if(!t)return;$('newTopic').value='';pendingNew=t;pick(t);toast('Added "'+t+'". Press Start to begin watching it.')}
+function renderTopics(items){
+  const by=new Map(); items.forEach(i=>{const k=slug(i.topic),p=by.get(k); if(!p||i.running||(i.cycle||0)>(p.cycle||0))by.set(k,{...i,running:i.running||(p&&p.running)})}); items=[...by.values()];
+  if(pendingNew&&!items.some(i=>slug(i.topic)===slug(pendingNew)))items=[{topic:pendingNew,cycle:0,running:false},...items];
+  $('topicList').innerHTML=items.length?items.map(i=>`<button class="topic ${slug(i.topic)===slug(topic)?'on':''}" data-t="${esc(i.topic)}">
+    <span class="dot ${i.running?'run':''}"></span><span class="nm">${esc(i.topic)}</span><span class="meta">${i.running?'running':(i.cycle==null?'':i.cycle+' rnd')}</span></button>`).join('')
+    :'<div class="sub" style="padding:0 8px">No libraries yet. Add one below.</div>';
+  $('topicList').querySelectorAll('.topic').forEach(b=>b.onclick=()=>pick(b.dataset.t));
 }
-async function research(){
-  if(!lastAsked||!topic)return;
-  const r=await fetch('/api/research',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic,question:lastAsked})});
-  const d=await r.json(); toast(d.running?'Queued: the agent will research this in its next round.':'Queued: press Start and the agent will research this first.'); refresh();
-}
+
+/* ---------- controls ---------- */
 async function start(){
-  topic=$('topic').value.trim(); if(!topic){$('topic').focus();return}
+  if(!topic){$('newTopic').focus();return}
   const c=$('cycles').value;
   const body={topic,interval:+$('interval').value||0,cycles:c?+c:null,question:$('q').value.trim()||null};
   const r=await fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  if(!r.ok)alert((await r.json()).detail); refresh();
+  if(!r.ok)toast((await r.json()).detail);else{$('q').value='';pendingNew=null}
+  refresh();
 }
-async function stop(){ if(topic) await fetch('/api/stop?topic='+encodeURIComponent(topic),{method:'POST'}); refresh(); }
+async function stop(){if(topic)await fetch('/api/stop?topic='+encodeURIComponent(topic),{method:'POST'});toast('Stopping after the current round…');refresh()}
 async function reset(){
-  topic=$('topic').value.trim(); if(!topic)return;
-  if(!confirm('Start "'+topic+'" over from a fresh state?\n\nThe summary and round history are cleared. Pages already saved in RawTree are kept.'))return;
+  if(!topic)return;
+  if(!confirm('Start "'+topic+'" over?\n\nIts summary and round history are cleared. Pages already saved in RawTree are kept.'))return;
   const r=await fetch('/api/reset?topic='+encodeURIComponent(topic),{method:'POST'});
-  if(!r.ok)alert((await r.json()).detail); refresh();
+  if(!r.ok)toast((await r.json()).detail);else toast('Started over. Press Start to run it again.');refresh();
 }
 
-// plain-English status from the latest log line
+/* ---------- live status ---------- */
 function status(d){
-  const el=$('status'), logs=d.logs||[], last=logs[logs.length-1]||'', s=d.state;
-  let title='Idle', detail=s.cycle?`Finished ${s.cycle} round${s.cycle>1?'s':''}. Press Start to continue.`:'Pick a library and press Start.', step=null, cls='';
+  const logs=d.logs||[], last=logs[logs.length-1]||'', s=d.state;
+  let title='Idle', detail=s.cycle?`Finished ${s.cycle} round${s.cycle>1?'s':''}. Press Start to continue.`:'Press Start and the agent begins investigating on its own.', step=null, cls='';
   if(d.running){
     cls='run'; const m=last.match(/^\[cycle (\d+)\] (.*)$/); const n=m?m[1]:s.cycle+1, body=m?m[2]:'';
     title=`Round ${n}`;
     if(/selecting question/.test(body)){detail='Deciding what to investigate next…';step='ask'}
-    else if(/^Q: Is this still accurate/.test(body)){detail='Re-checking an old belief: “'+body.slice(3).replace(/^Is this still accurate for the latest [^?]*\? /,'')+'”';step='search'}
-    else if(/^Q: /.test(body)){detail='Searching the web: “'+body.slice(3)+'”';step='search'}
-    else if(/observations/.test(body)){const o=body.match(/(\d+) observations, (\d+) new/);detail=`Read ${o?o[1]:''} pages (${o?o[2]:''} new, saved). Updating its summary with Liquid AI…`;step='think'}
-    else if(/^done/.test(body)){detail='Round complete. Waiting before the next round…';step='wait'}
+    else if(/^Q: Is this still accurate/.test(body)){detail='Re-checking an old belief: “'+noCites(tidy(body.slice(3).replace(/^Is this still accurate for the latest [^?]*\? /,'')))+'”';step='search'}
+    else if(/^Q: /.test(body)){detail='Searching the web: “'+tidy(body.slice(3))+'”';step='search'}
+    else if(/observations/.test(body)){const o=body.match(/(\d+) observations, (\d+) new/);detail=`Read ${o?o[1]:''} pages (${o?o[2]:''} new, saved to RawTree). Updating its summary with Liquid AI…`;step='think'}
+    else if(/^done/.test(body)){detail='Round complete, code checked. Waiting before the next round…';step='wait'}
     else if(/failed/.test(body)){cls='err';detail=body;title='Round '+n+' failed'}
     else detail=body||'Starting…';
   } else if(/stopped:|failed/.test(last)){cls='err';title='Stopped with an error';detail=last}
-  el.className='status '+cls; $('statusTitle').textContent=title; $('statusDetail').textContent=detail;
-  document.querySelectorAll('.step').forEach(x=>x.classList.toggle('on',x.dataset.s===step));
+  $('pill').className='pill '+cls; $('pillTxt').textContent=d.running?'Running':cls==='err'?'Error':'Idle';
+  $('liveTitle').textContent=title; $('liveDetail').textContent=detail;
+  const order=['ask','search','save','think','code','wait'], at=order.indexOf(step);
+  document.querySelectorAll('.st').forEach((x,i)=>{x.classList.toggle('on',i===at);x.classList.toggle('done',at>=0&&i<at)});
   $('startBtn').disabled=d.running; $('stopBtn').disabled=!d.running; $('resetBtn').disabled=d.running;
 }
 
-// line chart: pages read vs items in focus, one shared count axis
+/* ---------- chart ---------- */
 function chart(cs){
   const svg=$('chart'), tip=$('tip');
-  if(!cs.length){svg.innerHTML='';svg.style.height='60px';svg.innerHTML=`<text x="0" y="30">The chart fills in as rounds complete.</text>`;return}
-  svg.style.height='220px';
+  const seen=new Map(); cs.forEach(c=>seen.set(c.cycle,c)); cs=[...seen.values()].sort((a,b)=>a.cycle-b.cycle);
+  if(!cs.length){svg.style.height='80px';svg.innerHTML='<text x="0" y="40">The chart fills in as rounds complete.</text>';return}
+  svg.style.height='230px';
   const css=getComputedStyle(document.documentElement), c1=css.getPropertyValue('--series-1').trim(), c2=css.getPropertyValue('--series-2').trim(),
-        surf=css.getPropertyValue('--surface').trim(), grid=css.getPropertyValue('--line').trim(), axis=css.getPropertyValue('--line-strong').trim();
-  const W=svg.clientWidth||700, H=220, L=36, R=96, T=10, B=26, w=W-L-R, h=H-T-B;
+        surf=css.getPropertyValue('--surface').trim(), grid=css.getPropertyValue('--line').trim(), axis=css.getPropertyValue('--line-2').trim();
+  const W=svg.clientWidth||700, H=230, L=36, R=92, T=10, B=26, w=Math.max(40,W-L-R), h=H-T-B;
   const max=Math.max(1,...cs.map(c=>Math.max(c.evidence_total,c.working_state_size)));
   const nice=Math.pow(10,Math.floor(Math.log10(max))), top=Math.ceil(max/nice)*nice;
   const x=i=>L+(cs.length<2?w/2:i*w/(cs.length-1)), y=v=>T+h-v*h/top;
-  let g='';
-  for(let k=0;k<=4;k++){const v=top*k/4,yy=y(v);g+=`<line x1="${L}" x2="${L+w}" y1="${yy}" y2="${yy}" stroke="${k?grid:axis}" stroke-width="1"/><text x="${L-8}" y="${yy+4}" text-anchor="end">${Math.round(v)}</text>`}
+  let g=`<defs><linearGradient id="fa" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${c1}" stop-opacity=".18"/><stop offset="1" stop-color="${c1}" stop-opacity="0"/></linearGradient></defs>`;
+  for(let k=0;k<=4;k++){const v=top*k/4,yy=y(v);g+=`<line x1="${L}" x2="${L+w}" y1="${yy}" y2="${yy}" stroke="${k?grid:axis}"/><text x="${L-8}" y="${yy+4}" text-anchor="end">${Math.round(v)}</text>`}
   const step=Math.max(1,Math.ceil(cs.length/10));
   cs.forEach((c,i)=>{if(i%step===0||i===cs.length-1)g+=`<text x="${x(i)}" y="${H-6}" text-anchor="middle">${c.cycle}</text>`});
-  const line=(k,col)=>`<polyline fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="${cs.map((c,i)=>x(i)+','+y(c[k])).join(' ')}"/>`+
+  const pts=k=>cs.map((c,i)=>x(i)+','+y(c[k])).join(' ');
+  if(cs.length>1)g+=`<polygon fill="url(#fa)" points="${x(0)},${y(0)} ${pts('evidence_total')} ${x(cs.length-1)},${y(0)}"/>`;
+  const line=(k,col)=>`<polyline fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="${pts(k)}"/>`+
     cs.map((c,i)=>`<circle cx="${x(i)}" cy="${y(c[k])}" r="4" fill="${col}" stroke="${surf}" stroke-width="2"/>`).join('');
   const lc=cs[cs.length-1], ly1=y(lc.evidence_total), ly2=y(lc.working_state_size), sep=Math.abs(ly1-ly2)<16?(ly1<ly2?-8:8):0;
-  const lbl=(v,yy,col,t)=>`<text x="${x(cs.length-1)+10}" y="${yy+4}" style="fill:var(--text-2);font-weight:600">${v} <tspan style="fill:var(--muted);font-weight:400">${t}</tspan></text>`;
-  svg.innerHTML=g+line('evidence_total',c1)+line('working_state_size',c2)+lbl(lc.evidence_total,ly1+sep,c1,'read')+lbl(lc.working_state_size,ly2-sep,c2,'in focus')+
+  const lbl=(v,yy,t)=>`<text x="${x(cs.length-1)+10}" y="${yy+4}" style="fill:var(--text);font-weight:700">${v} <tspan style="fill:var(--muted);font-weight:400">${t}</tspan></text>`;
+  svg.innerHTML=g+line('evidence_total',c1)+line('working_state_size',c2)+lbl(lc.evidence_total,ly1+sep,'read')+lbl(lc.working_state_size,ly2-sep,'in focus')+
     `<line id="xh" y1="${T}" y2="${T+h}" stroke="${axis}" stroke-dasharray="3 3" style="display:none"/><rect x="${L}" y="${T}" width="${w}" height="${h}" fill="transparent" id="hit"/>`;
   const hit=svg.querySelector('#hit'), xh=svg.querySelector('#xh');
   hit.onmousemove=e=>{const r=svg.getBoundingClientRect(), px=e.clientX-r.left;
     const i=cs.length<2?0:Math.max(0,Math.min(cs.length-1,Math.round((px-L)/w*(cs.length-1)))), c=cs[i];
     xh.setAttribute('x1',x(i));xh.setAttribute('x2',x(i));xh.style.display='';
-    tip.innerHTML=`<div style="font-weight:600;margin-bottom:4px">Round ${c.cycle}</div>`+
+    tip.innerHTML=`<div style="font-weight:700;margin-bottom:5px">Round ${c.cycle}</div>`+
       `<div class="r"><span><i style="background:${c1}"></i> Pages read</span><b>${c.evidence_total}</b></div>`+
       `<div class="r"><span><i style="background:${c2}"></i> In focus</span><b>${c.working_state_size}</b></div>`+
       `<div class="r" style="color:var(--muted)"><span>New this round</span><span>${c.new_evidence}</span></div>`;
-    tip.style.display='block'; const tx=x(i)+12, tw=tip.offsetWidth; tip.style.left=(tx+tw>W?x(i)-tw-12:tx)+'px'; tip.style.top=(T+10)+'px'};
+    tip.style.display='block'; const tx=x(i)+12, tw=tip.offsetWidth; tip.style.left=(tx+tw>W?x(i)-tw-12:tx)+'px'; tip.style.top=(T+8)+'px'};
   hit.onmouseleave=()=>{tip.style.display='none';xh.style.display='none'};
 }
 
+/* ---------- ask ---------- */
+function renderChat(){
+  const el=$('chat');
+  el.innerHTML=chat.length?chat.map((m,i)=>m.me?`<div class="msg me">${esc(m.text)}</div>`:
+    m.wait?`<div class="msg bot"><span class="typing"><i></i><i></i><i></i></span> <span style="color:var(--muted);font-size:12.5px">${lastData&&lastData.running?'The agent is mid-round, so this can take up to a minute…':'Thinking…'}</span></div>`:
+    `<div class="msg bot">${m.err?esc(m.text):rich(m.text)}${m.src&&m.src.length?`<div class="srcs"><span style="color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.05em">SOURCES</span>${m.src.map(s=>`<a href="${esc(s.url)}" target="_blank" rel="noopener">${ico('ext','style="width:11px;height:11px;vertical-align:-1px"')} ${esc(s.title||s.url)}</a>`).join('')}</div>`:''}
+      ${m.err?'':`<div class="foot"><span class="conf ${esc(m.conf)}">${esc(m.conf)} confidence</span>${m.queued?`<span class="badge ok">QUEUED FOR RESEARCH</span>`:`<button class="btn sm" onclick="research(${i})">${ico('search')}${m.answered?'Research deeper':'Research this next round'}</button>`}</div>`}</div>`).join('')
+    :emptyBox('chat','Ask anything about '+esc(topic||'the library')+', like what changed recently or what could break.');
+  el.scrollTop=el.scrollHeight;
+}
+async function ask(q){
+  q=(q||$('askq').value).trim(); if(!topic||!q)return; $('askq').value='';
+  chat.push({me:1,text:q},{wait:1}); renderChat(); $('suggest').innerHTML=''; $('askBtn').disabled=true;
+  try{
+    const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic,question:q})});
+    const d=await r.json(); if(!r.ok)throw new Error(d.detail||'failed');
+    Object.assign(sources,d.sources||{});
+    chat[chat.length-1]={text:d.answer,conf:d.confidence,answered:d.answered,q,src:Object.values(d.sources||{})};
+  }catch(e){chat[chat.length-1]={text:'Could not answer: '+e.message,err:1}}
+  $('askBtn').disabled=false; renderChat();
+}
+async function research(i){
+  const m=chat[i]; if(!m||!topic)return;
+  const r=await fetch('/api/research',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic,question:m.q})});
+  const d=await r.json(); m.queued=1; renderChat();
+  toast(d.running?'Queued: the agent will research this in its next round.':'Queued: press Start and the agent will research this first.'); refresh();
+}
+
+/* ---------- render ---------- */
 async function refresh(){
-  const tl=await (await fetch('/api/topics')).json();
-  $('topics').innerHTML=tl.topics.map(t=>`<option value="${esc(t)}">`).join('');
-  if(!topic&&tl.topics.length){topic=tl.topics[0];$('topic').value=topic}
+  let tl; try{tl=await (await fetch('/api/topics')).json()}catch(e){return}
+  let items=tl.items||(tl.topics||[]).map(t=>({topic:t,cycle:null,running:false}));
+  if(!topic&&items.length)topic=items[0].topic;
+  renderTopics(items);
+  $('welcome').style.display=topic?'none':'block'; $('dash').style.display=topic?'block':'none';
   if(!topic)return;
   const d=await (await fetch('/api/state?topic='+encodeURIComponent(topic))).json(); lastData=d;
-  const s=d.state, cs=d.cycles; sources=d.sources||{};
+  if(!tl.items)renderTopics(items.map(i=>slug(i.topic)===slug(topic)?{...i,running:d.running,cycle:d.state.cycle}:i));
+  const s=d.state, cs=d.cycles; sources=Object.assign(sources,d.sources||{});
+
+  $('title').textContent=topic;
+  $('subtitle').textContent=s.cycle?`${s.cycle} rounds · ${s.evidence_count} pages read · ${s.active_changes.length} changes tracked`:'Not started yet. Press Start in the sidebar.';
   status(d);
+
   const focus=s.active_facts.length+s.active_changes.length+s.hypotheses.length+s.open_questions.length+s.stale_claims.length;
-  $('sRounds').textContent=s.cycle; $('sPages').textContent=s.evidence_count; $('sFocus').textContent=focus;
-  $('sArch').textContent=s.archived_count; $('sFiles').textContent=s.impacted_files.length;
-  chart(cs);
+  $('kRounds').textContent=s.cycle; $('kPages').textContent=s.evidence_count; $('kFocus').textContent=focus;
+  $('kArch').textContent=s.archived_count; $('kFiles').textContent=s.impacted_files.length;
+  $('kFilesH').textContent=d.repo?'in '+d.repo.split('/')[1]:(s.impacted_files.length?'in your repo':'connect a repo');
+  $('nFind').textContent=s.active_changes.length+s.hypotheses.length; $('nCode').textContent=s.impacted_files.length;
+  if($('p-overview').classList.contains('on'))chart(cs);
+
   const last=cs[cs.length-1];
-  $('question').innerHTML=last?rich(last.question):'Nothing yet. Press Start.';
-  $('next').innerHTML=s.next_action?'<b>Next step it suggested:</b> '+esc(s.next_action):'';
-  const lc=s.last_check||{};
-  $('lastCheck').innerHTML=lc.item?`<div class="check"><b>Latest re-check (round ${lc.cycle}):</b> ${rich(lc.item)} → <b>${{confirmed:'still true ✓',corrected:'outdated, corrected',reworded:'updated wording',unclear:'no new evidence either way'}[lc.outcome]||esc(lc.outcome)}</b></div>`:'';
-  $('inbox').innerHTML=(s.inbox&&s.inbox.length)?`<div class="check"><b>Your questions, next in line:</b><br>${s.inbox.map(q=>'• '+esc(q)).join('<br>')}</div>`:'';
-  const tidy=q=>String(q).replace(/\s*\[[A-Z]\d+\]/g,'').replace(/\s+-\s+need to .*$/i,'').trim();
+  $('question').textContent=last?noCites(tidy(last.question)):'Nothing yet. Press Start.';
+  const lc=s.last_check||{}, kv=[];
+  if(s.next_action)kv.push(`<div><b class="k">Next step it suggested</b>${esc(noCites(tidy(s.next_action)))}</div>`);
+  if(lc.item)kv.push(`<div><b class="k">Latest re-check · round ${lc.cycle}</b>${rich(lc.item)} → <span class="outcome ${esc(lc.outcome)}">${{confirmed:'still true ✓',corrected:'outdated, corrected',reworded:'wording updated',unclear:'no new evidence either way'}[lc.outcome]||esc(lc.outcome)}</span></div>`);
+  if(s.inbox&&s.inbox.length)kv.push(`<div><b class="k">Your questions, next in line</b>${s.inbox.map(q=>'• '+esc(q)).join('<br>')}</div>`);
+  $('nowKv').innerHTML=kv.join('');
+
+  list('ovChanges',s.active_changes,null,null,'No confirmed changes yet.',3);
+  list('ovRisks',s.hypotheses,null,null,'No risks identified yet.',3);
+  list('changes',s.active_changes,'cChanges',null,'No confirmed changes yet.');
+  list('risks',s.hypotheses,'cRisks',null,'No risks identified yet.');
+  list('facts',s.active_facts,'cFacts',null,'No facts yet.');
+  list('open',s.open_questions,'cOpen',null,'No open questions.');
+  list('stale',s.stale_claims,'cStale',x=>{const p=x.split(' — superseded');const why=(p[1]||'').replace(/^:\s*/,'').trim();
+    return '<span class="was">'+rich(p[0])+'</span>'+(why?'<span class="now"><b>Now:</b> '+rich(why)+'</span>':'')},'No corrections yet. It corrects a belief only when newer evidence disproves it.');
+
+  // code tab
+  const repoUrl=d.repo?'https://github.com/'+d.repo:null;
+  // same rule the scanner uses: specific APIs only (no bare package names); file names shown as name.*
+  const shown=x=>x.replace(/\.(js|ts|mjs|cjs|jsx|tsx)$/,'.*').replace(/\.$/,'.*');
+  const scanned=[...new Set(s.code_signals.flatMap(x=>/\//.test(x)&&!x.startsWith('@')&&!/^[a-z0-9-]+\/[a-z0-9-]+$/.test(x)?x.split('/'):[x])
+    .filter(x=>x.length>=3&&/[._\/@]|[a-z][A-Z]/.test(x)).map(shown))];
+  $('repoBox').innerHTML=(d.repo?`<div class="repo">${ico('git')}<a class="nm" href="${esc(repoUrl)}" target="_blank" rel="noopener">${esc(d.repo)}</a>
+      <span style="color:var(--muted);font-size:12px">scanned after every round</span></div>`:'')+
+      (scanned.length?`<div class="sub" style="margin:0 0 6px;font-weight:600;color:var(--text-2)">Watching your code for</div><div class="tags" style="margin-bottom:16px">${scanned.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div>`:'');
+  $('cFiles').textContent=s.impacted_files.length||'';
+  $('impact').innerHTML=s.impacted_files.length?s.impacted_files.map(f=>{
+      const base=repoUrl&&f.sha?`${repoUrl}/blob/${f.sha}/${f.path}`:null;
+      return `<div class="file"><div class="fh">${ico('code')}<span class="fp">${base?`<a href="${esc(base)}" target="_blank" rel="noopener">${esc(f.path)}</a>`:esc(f.path)}</span>
+        <span class="tags">${(f.signals||[]).map(x=>`<span class="tag">${esc(shown(x))}</span>`).join('')}</span></div>`+
+        (f.hits||[]).slice(0,4).map(h=>`<div class="ln">${h.line?(base?`<a href="${esc(base)}#L${h.line}" target="_blank" rel="noopener">L${h.line}</a>`:`<a>L${h.line}</a>`):'<a>file</a>'}<code>${esc(h.code)}</code></div>`).join('')+`</div>`}).join('')
+    :emptyBox('code',(d.repo||s.code_signals.length)?'No files mention the affected code yet. They appear here after a round finds specific APIs.':'Connect your repo: set <span class="mono">GITHUB_REPO=owner/name</span> in <span class="mono">.env</span> and restart the dashboard.');
+
+  // ask suggestions
   const sug=[...(s.open_questions||[]).slice(-2).map(tidy),'What could break if I upgrade?','What changed most recently?'];
-  $('suggest').innerHTML=s.cycle?sug.map(q=>`<button class="chip" onclick="ask(this.textContent)">${esc(q)}</button>`).join(''):'';
-  list('changes',s.active_changes,'cChanges'); list('facts',s.active_facts,'cFacts');
-  list('risks',s.hypotheses,'cRisks'); list('open',s.open_questions,'cOpen');
-  list('stale',s.stale_claims,'cStale',x=>{const p=x.split(' — superseded');return '<span class="was">'+rich(p[0])+'</span>'+(p[1]&&p[1].replace(/^:\s*/,'').trim()?'<span class="now">Now: '+rich(p[1].replace(/^:\s*/,''))+'</span>':'')});
-  if(s.impacted_files.length){
-    $('impact').innerHTML=s.impacted_files.map(f=>`<div class="file"><div class="p">${esc(f.path)}</div>`+(f.hits||[]).slice(0,3).map(h=>`<div class="l">${h.line?'L'+h.line+': ':''}${esc(h.code)}</div>`).join('')+`</div>`).join('');
-  } else {
-    $('impact').innerHTML=`<div class="none">No files flagged yet${s.code_signals.length?'. Watching for:':'.'}</div>`+
-      (s.code_signals.length?`<div class="signals">${s.code_signals.map(x=>`<span class="tag mono">${esc(x)}</span>`).join('')}</div>`:'')+
-      `<div class="sub" style="margin:10px 0 0">Set GITHUB_TOKEN and GITHUB_REPO in .env to scan your repo.</div>`;
-  }
-  $('sFilesH').textContent=s.impacted_files.length?'in your repo':'connect GitHub';
-  $('rounds').innerHTML=cs.length?'<tr><th>#</th><th>What it investigated</th><th>New pages</th><th>Recalled</th><th>Archived</th><th>In focus</th><th>Time</th></tr>'+
-    cs.slice().reverse().map(c=>`<tr><td class="num">${c.cycle}</td><td>${c.kind==='recheck'?`<span class="kind ${c.check&&c.check.outcome==='corrected'?'corrected':'recheck'}">re-check${c.check?' · '+esc(c.check.outcome):''}</span><br>`:c.kind==='user'?'<span class="kind user">your question</span><br>':''}${rich(c.question)}${c.warnings&&c.warnings.length?`<div class="sub" style="margin:4px 0 0;color:var(--bad)">${esc(c.warnings.join('; '))}</div>`:''}</td><td class="num">${c.new_evidence}</td><td class="num">${c.recalled}</td><td class="num">${c.dropped}</td><td class="num">${c.working_state_size}</td><td class="num">${Math.round(c.seconds)}s</td></tr>`).join('')
-    :'<tr><td class="none">No rounds yet.</td></tr>';
-  $('arch').innerHTML=d.archive.length?d.archive.slice().reverse().map(a=>`<li><span class="reason ${esc(a.reason)}">${esc(a.reason)}</span><span style="color:var(--muted);font-size:12px">round ${a.cycle}</span><div style="margin-top:4px">${rich(a.item)}</div></li>`).join(''):'<li class="none" style="background:none;padding:0">Nothing archived yet.</li>';
-  $('log').textContent=(d.logs||[]).join('\n')||'No activity yet.';
+  $('suggest').innerHTML=s.cycle&&!chat.length?sug.map(q=>`<button class="chip">${esc(q)}</button>`).join(''):'';
+  $('suggest').querySelectorAll('.chip').forEach(b=>b.onclick=()=>ask(b.textContent));
+  if(!chat.length)renderChat();
+
+  // history
+  const seen=new Map(); cs.forEach(c=>seen.set(c.cycle,c)); const rounds=[...seen.values()].sort((a,b)=>b.cycle-a.cycle);
+  $('cRounds').textContent=rounds.length||'';
+  $('timeline').innerHTML=rounds.length?rounds.map(c=>{const k=c.kind==='recheck'&&c.check&&c.check.outcome==='corrected'?'corrected':(c.kind||'auto');
+    const lab={recheck:'Re-check'+(c.check?' · '+c.check.outcome:''),corrected:'Re-check · corrected',user:'Your question',auto:'Agent chose'}[k]||k;
+    return `<div class="ev ${esc(k)}"><div class="t">Round ${c.cycle} <span class="kind ${esc(k)}">${esc(lab)}</span> ${new Date(c.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
+      <div class="q">${esc(noCites(tidy(c.question)))}</div>
+      <div class="s"><span>${c.new_evidence} new pages</span><span>${c.recalled} recalled</span><span>${c.dropped} archived</span><span>${c.working_state_size} in focus</span><span>${Math.round(c.seconds)}s</span></div>
+      ${c.warnings&&c.warnings.length?`<div class="warn">${esc(c.warnings.join('; '))}</div>`:''}</div>`}).join('')
+    :emptyBox('clock','No rounds yet.');
+  $('arch').innerHTML=d.archive.length?d.archive.slice().reverse().slice(0,20).map(a=>`<li><span class="reason ${esc(a.reason)}">${esc(a.reason)}</span><span style="color:var(--muted);font-size:12px">round ${a.cycle}</span><div style="margin-top:5px">${rich(a.item)}</div></li>`).join('')
+    :`<li class="bare">${emptyBox('archive','Nothing archived yet.')}</li>`;
+  $('log').textContent=(d.logs||[]).join('\n')||'No activity in this session yet.';
 }
-$('topic').addEventListener('change',()=>{topic=$('topic').value.trim();refresh()});
-addEventListener('resize',()=>{if(lastData)chart(lastData.cycles)});
+addEventListener('resize',()=>{if(lastData&&$('p-overview').classList.contains('on'))chart(lastData.cycles)});
 refresh(); setInterval(refresh,3000);
 </script>
 </body>

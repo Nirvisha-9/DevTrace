@@ -28,7 +28,13 @@ def _running(topic):
 
 @app.get("/api/topics")
 def api_topics():
-    return {"topics":sorted(set(topics())|set(RUNNERS))}
+    names=sorted(set(topics())|set(RUNNERS))
+    out=[]
+    for t in names:
+        s=Store(t).load_state()
+        out.append({"topic":t,"cycle":s.cycle,"evidence":s.evidence_count,"running":_running(t),
+                    "changes":len(s.active_changes),"files":len(s.impacted_files)})
+    return {"topics":names,"items":out}
 
 @app.get("/api/state")
 def api_state(topic:str):
@@ -37,7 +43,8 @@ def api_state(topic:str):
     ids=set(re.findall(r"\[([0-9a-f]{16})\]",json.dumps(state)))
     sources={e["evidence_id"]:{"title":e.get("title",""),"url":e.get("url","")}
              for e in st.evidence() if e["evidence_id"] in ids}
-    return {"state":state,"cycles":st.cycles(),"archive":st.archived()[-30:],"sources":sources,
+    from devtrace.config import GITHUB_REPO
+    return {"state":state,"cycles":st.cycles(),"archive":st.archived()[-40:],"sources":sources,"repo":GITHUB_REPO,
             "running":_running(topic),"logs":list(r["logs"]) if r else []}
 
 @app.post("/api/run")

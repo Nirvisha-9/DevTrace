@@ -15,6 +15,7 @@ def _strs(xs):
         if isinstance(x,dict): x=x.get("text") or x.get("claim") or x.get("question") or json.dumps(x)
         x=re.sub(r"\s*\[[FCHQ]\d+\]","",str(x)).strip()   # the model sometimes echoes internal ids
         x=re.sub(r"\s+-\s+need to .*$","",x).strip()
+        x=re.sub(r"\s*\((already in (state|active_\w+)[^)]*|confirmed|superseded[^)]*)\)","",x,flags=re.I).strip()
         if x and x not in out: out.append(x)
     return out
 
