@@ -10,8 +10,11 @@ class GitHubClient:
     def __init__(self):
         self._files=None; self._sha=None
 
-    def enabled(self): return bool(GITHUB_TOKEN and GITHUB_REPO and "/" in GITHUB_REPO)
-    def _h(self): return {"Authorization":f"Bearer {GITHUB_TOKEN}","Accept":"application/vnd.github+json"}
+    def enabled(self): return bool(GITHUB_REPO and "/" in GITHUB_REPO)   # token optional for public repos
+    def _h(self):
+        h={"Accept":"application/vnd.github+json"}
+        if GITHUB_TOKEN: h["Authorization"]=f"Bearer {GITHUB_TOKEN}"
+        return h
 
     def _head_sha(self):
         r=requests.get(f"https://api.github.com/repos/{GITHUB_REPO}/commits/HEAD",headers=self._h(),timeout=30)
