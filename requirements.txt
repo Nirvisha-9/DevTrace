@@ -1,0 +1,7 @@
+fastapi>=0.116
+uvicorn[standard]>=0.35
+requests>=2.32
+python-dotenv>=1.1
+pydantic>=2.8
+mlx-lm>=0.31
+json-repair>=0.30

@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DevTrace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f6f6f4; --surface:#ffffff; --surface-2:#f1f1ee; --line:#e4e3de; --line-strong:#d3d2cc;
+  --text:#16161a; --text-2:#55545e; --muted:#8a8993;
+  --accent:#2a78d6; --accent-ink:#ffffff; --accent-soft:#e8f1fc;
+  --series-1:#2a78d6; --series-2:#eb6834;
+  --good:#1a7f37; --good-soft:#e6f4ea; --warn:#9a6700; --warn-soft:#fff4d6;
+  --bad:#c93c37; --bad-soft:#fdecea; --info-soft:#eef2f8;
+  --shadow:0 1px 2px rgba(20,20,30,.04),0 4px 16px rgba(20,20,30,.05);
+  --radius:14px;
+}
+@media (prefers-color-scheme:dark){
+  :root:where(:not([data-theme="light"])){
+    color-scheme:dark;
+    --bg:#101012; --surface:#18181b; --surface-2:#1f1f23; --line:#2a2a2f; --line-strong:#38383f;
+    --text:#f4f4f5; --text-2:#b8b8c0; --muted:#7d7d88;
+    --accent:#3987e5; --accent-ink:#ffffff; --accent-soft:#16263b;
+    --series-1:#3987e5; --series-2:#d95926;
+    --good:#4ac26b; --good-soft:#132a1b; --warn:#d4a72c; --warn-soft:#2b2412;
+    --bad:#e66767; --bad-soft:#2e1616; --info-soft:#1b2130;
+    --shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#101012; --surface:#18181b; --surface-2:#1f1f23; --line:#2a2a2f; --line-strong:#38383f;
+  --text:#f4f4f5; --text-2:#b8b8c0; --muted:#7d7d88;
+  --accent:#3987e5; --accent-ink:#ffffff; --accent-soft:#16263b;
+  --series-1:#3987e5; --series-2:#d95926;
+  --good:#4ac26b; --good-soft:#132a1b; --warn:#d4a72c; --warn-soft:#2b2412;
+  --bad:#e66767; --bad-soft:#2e1616; --info-soft:#1b2130;
+  --shadow:0 1px 2px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:14px/1.55 Inter,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 20px 60px}
+code,.mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12.5px}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:36px;height:36px;border-radius:10px;background:var(--accent);display:grid;place-items:center;color:#fff}
+.brand h1{font-size:18px;margin:0;letter-spacing:-.01em}
+.brand p{margin:0;color:var(--text-2);font-size:13px}
+.icon-btn{border:1px solid var(--line);background:var(--surface);color:var(--text-2);border-radius:10px;width:36px;height:36px;cursor:pointer;display:grid;place-items:center}
+
+/* cards */
+.card{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.pad{padding:18px 20px}
+.card h2{font-size:13px;font-weight:600;margin:0 0 2px;display:flex;align-items:center;gap:8px}
+.card .sub{color:var(--muted);font-size:12.5px;margin:0 0 12px}
+.count{margin-left:auto;font-size:12px;color:var(--muted);font-weight:500}
+
+/* controls */
+.controls{display:grid;grid-template-columns:minmax(0,1.4fr) 110px 120px auto;gap:10px;align-items:end}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--text-2);font-weight:500}
+input{font:inherit;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;min-width:0;width:100%}
+input:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+button.b{font:inherit;font-weight:600;border-radius:10px;padding:9px 14px;border:1px solid var(--line-strong);background:var(--surface);color:var(--text);cursor:pointer;white-space:nowrap}
+button.b:hover{background:var(--surface-2)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button.primary:hover{filter:brightness(1.07);background:var(--accent)}
+button.b:disabled{opacity:.45;cursor:not-allowed}
+details.adv{margin-top:10px}
+details.adv summary{cursor:pointer;color:var(--muted);font-size:12.5px}
+details.adv input{margin-top:8px}
+
+/* status banner */
+.status{display:flex;align-items:center;gap:12px;margin:14px 0 18px;padding:12px 16px;border-radius:12px;background:var(--info-soft);border:1px solid var(--line)}
+.status.run{background:var(--good-soft)}
+.status.err{background:var(--bad-soft)}
+.pulse{width:10px;height:10px;border-radius:50%;background:var(--muted);flex:none}
+.status.run .pulse{background:var(--good);box-shadow:0 0 0 0 var(--good);animation:p 1.6s infinite}
+.status.err .pulse{background:var(--bad)}
+@keyframes p{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--good) 60%,transparent)}100%{box-shadow:0 0 0 10px transparent}}
+.status b{font-weight:600}
+.status .detail{color:var(--text-2);overflow-wrap:anywhere}
+
+/* how it works */
+details.how{margin-bottom:18px}
+details.how summary{cursor:pointer;font-weight:600;font-size:13px;padding:14px 20px;list-style:none;display:flex;align-items:center;gap:8px}
+details.how summary::-webkit-details-marker{display:none}
+details.how summary .chev{transition:transform .15s;color:var(--muted)}
+details.how[open] summary .chev{transform:rotate(90deg)}
+.steps{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;padding:0 20px 18px}
+.step{background:var(--surface-2);border-radius:10px;padding:12px}
+.step .n{font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.04em}
+.step .t{font-weight:600;font-size:13px;margin:2px 0}
+.step .d{font-size:12px;color:var(--text-2)}
+.step.on{outline:2px solid var(--accent);background:var(--accent-soft)}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.stat{padding:14px 16px}
+.stat .k{font-size:12px;color:var(--text-2);font-weight:500}
+.stat .v{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.2;margin-top:2px}
+.stat .h{font-size:11.5px;color:var(--muted)}
+
+/* chart */
+.chart-card{margin-bottom:18px}
+.legend{display:flex;gap:16px;font-size:12.5px;color:var(--text-2);margin-bottom:6px;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
+.chart-wrap{position:relative}
+svg#chart{width:100%;height:220px;display:block;overflow:visible}
+svg#chart text{font:11.5px Inter,sans-serif;fill:var(--muted)}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line-strong);box-shadow:var(--shadow);border-radius:10px;padding:8px 10px;font-size:12px;min-width:150px;display:none;z-index:2}
+.tip .r{display:flex;align-items:center;gap:6px;justify-content:space-between}
+.tip .r i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.empty-chart{color:var(--muted);font-size:13px;padding:40px 0;text-align:center}
+
+/* grid of panels */
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-bottom:18px}
+.col{display:flex;flex-direction:column;gap:18px;min-width:0}
+ul.items{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+ul.items li{padding:10px 12px;border-radius:10px;background:var(--surface-2);overflow-wrap:anywhere;font-size:13.5px}
+ul.items.change li{border-left:3px solid var(--accent)}
+ul.items.risk li{border-left:3px solid var(--bad);background:var(--bad-soft)}
+ul.items.stale li{border-left:3px solid var(--warn);background:var(--warn-soft)}
+ul.items.q li{border-left:3px solid var(--muted)}
+.none{color:var(--muted);font-size:13px;font-style:italic}
+.cite{display:inline-flex;align-items:center;font-family:"JetBrains Mono",monospace;font-size:10.5px;padding:1px 6px;border-radius:6px;background:var(--accent-soft);color:var(--accent);margin-left:4px;vertical-align:1px;white-space:nowrap}
+.was{color:var(--text-2);text-decoration:line-through;text-decoration-color:var(--warn)}
+.now{display:block;margin-top:4px;font-size:12.5px;color:var(--text)}
+.qbox{background:var(--accent-soft);border-radius:10px;padding:12px 14px;font-weight:500;overflow-wrap:anywhere}
+.next{margin-top:10px;font-size:13px;color:var(--text-2)}
+.next b{color:var(--text);font-weight:600}
+.file{padding:10px 12px;border-radius:10px;background:var(--surface-2);margin-bottom:8px}
+.file .p{font-family:"JetBrains Mono",monospace;font-size:12.5px;font-weight:500;overflow-wrap:anywhere}
+.file .l{font-family:"JetBrains Mono",monospace;font-size:11.5px;color:var(--text-2);margin-top:3px;overflow-wrap:anywhere}
+.tag{display:inline-block;max-width:100%;overflow-wrap:anywhere;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--text-2);border:1px solid var(--line)}
+.signals{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+
+/* table + log */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;font-weight:500;color:var(--muted);font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line)}
+.tbl td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl tr:last-child td{border-bottom:0}
+.scroll{overflow-x:auto}
+details.more{margin-top:18px}
+details.more summary{cursor:pointer;font-weight:600;font-size:13px;padding:14px 20px}
+.more-body{padding:0 20px 18px}
+.reason{font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;margin-right:6px;white-space:nowrap}
+.reason.stale{background:var(--warn-soft);color:var(--warn)}
+.reason.merged,.reason.compacted{background:var(--surface-2);color:var(--text-2)}
+.reason.resolved{background:var(--good-soft);color:var(--good)}
+pre.log{margin:0;max-height:260px;overflow:auto;font:12px/1.6 "JetBrains Mono",monospace;color:var(--text-2);white-space:pre-wrap;background:var(--surface-2);border-radius:10px;padding:12px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+
+@media (max-width:900px){
+  .steps{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .grid,.two{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:620px){
+  .wrap{padding:16px 16px 40px}
+  .controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .controls .topic,.controls .btns{grid-column:1/-1}
+  .btns button{flex:1}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stat .v{font-size:24px}
+  .brand p{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/><path d="M8 11h6M11 8v6"/></svg>
+      </div>
+      <div>
+        <h1>DevTrace</h1>
+        <p>An agent that keeps watching a library for changes and tells you what could break your code.</p>
+      </div>
+    </div>
+    <button class="icon-btn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </header>
+
+  <section class="card pad">
+    <div class="controls">
+      <label class="f topic">Library to watch
+        <input id="topic" list="topics" placeholder="e.g. stripe-python" autocomplete="off">
+        <datalist id="topics"></datalist>
+      </label>
+      <label class="f" title="Leave blank to run until you press Stop">Rounds
+        <input id="cycles" type="number" min="1" placeholder="∞">
+      </label>
+      <label class="f" title="Pause between rounds">Pause (sec)
+        <input id="interval" type="number" min="0" value="30">
+      </label>
+      <div class="btns">
+        <button class="b primary" id="startBtn" onclick="start()">Start</button>
+        <button class="b" id="stopBtn" onclick="stop()">Stop</button>
+        <button class="b" id="resetBtn" onclick="reset()" title="Start over from a fresh state (saved evidence in RawTree is kept)">Reset</button>
+      </div>
+    </div>
+    <details class="adv"><summary>Advanced: give it a first question</summary>
+      <input id="q" placeholder="Optional. Leave empty to let the agent decide (recommended).">
+    </details>
+  </section>
+
+  <div class="status" id="status"><span class="pulse"></span><div><b id="statusTitle">Idle</b> <span class="detail" id="statusDetail">Pick a library and press Start.</span></div></div>
+
+  <details class="how card" id="how">
+    <summary><span class="chev">▶</span> How it works: one round, repeated</summary>
+    <div class="steps">
+      <div class="step" data-s="ask"><div class="n">1</div><div class="t">Decide</div><div class="d">Picks the most useful thing to look into next.</div></div>
+      <div class="step" data-s="search"><div class="n">2</div><div class="t">Search</div><div class="d">Reads live release notes, docs and migration guides (Nimble).</div></div>
+      <div class="step" data-s="save"><div class="n">3</div><div class="t">Remember</div><div class="d">Saves every page permanently (RawTree).</div></div>
+      <div class="step" data-s="think"><div class="n">4</div><div class="t">Update</div><div class="d">Rewrites a short summary and corrects outdated beliefs (Liquid AI).</div></div>
+      <div class="step" data-s="code"><div class="n">5</div><div class="t">Check code</div><div class="d">Looks for affected files in your repo (GitHub).</div></div>
+      <div class="step" data-s="wait"><div class="n">6</div><div class="t">Repeat</div><div class="d">Moves on to a new open question.</div></div>
+    </div>
+  </details>
+
+  <section class="stats">
+    <div class="card stat"><div class="k">Rounds</div><div class="v" id="sRounds">0</div><div class="h">investigations so far</div></div>
+    <div class="card stat"><div class="k">Pages read</div><div class="v" id="sPages">0</div><div class="h">all kept in RawTree</div></div>
+    <div class="card stat"><div class="k">In focus</div><div class="v" id="sFocus">0</div><div class="h">items in the summary</div></div>
+    <div class="card stat"><div class="k">Archived</div><div class="v" id="sArch">0</div><div class="h">moved out, never deleted</div></div>
+    <div class="card stat"><div class="k">Files at risk</div><div class="v" id="sFiles">0</div><div class="h" id="sFilesH">in your repo</div></div>
+  </section>
+
+  <section class="card pad chart-card">
+    <h2>Knowledge grows, focus stays small</h2>
+    <p class="sub">Everything it reads is kept, but the summary it works from stays compact, so it can run for weeks.</p>
+    <div class="legend"><span><i style="background:var(--series-1)"></i>Pages read (total)</span><span><i style="background:var(--series-2)"></i>Items in focus</span></div>
+    <div class="chart-wrap"><svg id="chart" role="img" aria-label="Pages read versus items in focus per round"></svg><div class="tip" id="tip"></div></div>
+  </section>
+
+  <section class="grid">
+    <div class="col">
+      <div class="card pad">
+        <h2>Investigating now</h2>
+        <p class="sub">The question the agent chose for this round.</p>
+        <div class="qbox" id="question">Nothing yet</div>
+        <div class="next" id="next"></div>
+      </div>
+      <div class="card pad">
+        <h2>What changed <span class="count" id="cChanges"></span></h2>
+        <p class="sub">Releases, removals, renames and migrations it has confirmed.</p>
+        <ul class="items change" id="changes"></ul>
+      </div>
+      <div class="card pad">
+        <h2>Key facts <span class="count" id="cFacts"></span></h2>
+        <p class="sub">What it currently believes, with sources.</p>
+        <ul class="items" id="facts"></ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card pad">
+        <h2>What could break <span class="count" id="cRisks"></span></h2>
+        <p class="sub">How these changes could affect code that uses the library.</p>
+        <ul class="items risk" id="risks"></ul>
+      </div>
+      <div class="card pad">
+        <h2>Files at risk</h2>
+        <p class="sub" id="impactSub">Files in your repo that use the affected code.</p>
+        <div id="impact"></div>
+      </div>
+      <div class="card pad">
+        <h2>Still to find out <span class="count" id="cOpen"></span></h2>
+        <p class="sub">Open questions it will investigate in later rounds.</p>
+        <ul class="items q" id="open"></ul>
+      </div>
+      <div class="card pad">
+        <h2>Corrected beliefs <span class="count" id="cStale"></span></h2>
+        <p class="sub">Things it believed earlier that newer evidence proved wrong.</p>
+        <ul class="items stale" id="stale"></ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card pad">
+    <h2>Rounds</h2>
+    <p class="sub">Each row is one round the agent ran on its own.</p>
+    <div class="scroll"><table class="tbl" id="rounds"></table></div>
+  </section>
+
+  <details class="more card">
+    <summary>Archive &amp; activity log</summary>
+    <div class="more-body two">
+      <div><p class="sub">Items that left the summary: merged (reworded), resolved, corrected or trimmed. All kept.</p><ul class="items" id="arch"></ul></div>
+      <div><p class="sub">Raw agent log.</p><pre class="log" id="log">No activity yet.</pre></div>
+    </div>
+  </details>
+
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let topic='', sources={}, lastData=null;
+
+// theme toggle (remembered per browser)
+try{const t=localStorage.getItem('dt-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}
+$('theme').onclick=()=>{const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  const t=dark?'light':'dark';document.documentElement.dataset.theme=t;try{localStorage.setItem('dt-theme',t)}catch(e){};if(lastData)chart(lastData.cycles)};
+try{if(localStorage.getItem('dt-how')!=='closed')$('how').open=true}catch(e){$('how').open=true}
+$('how').addEventListener('toggle',()=>{try{localStorage.setItem('dt-how',$('how').open?'open':'closed')}catch(e){}});
+
+// turn [evidence_id] into source links
+function rich(t){
+  t=String(t??'').replace(/\s*\[[A-Z]\d+\]/g,'').replace(/\s+-\s+need to .*$/i,'');   // tidy internal ids from older rounds
+  return esc(t).replace(/\s*\[([0-9a-f]{16})\]/g,(m,id)=>{const s=sources[id];
+    return s&&s.url?` <a class="cite" href="${esc(s.url)}" target="_blank" rel="noopener" title="${esc(s.title)}">source</a>`:` <span class="cite" title="evidence ${id}">source</span>`});
+}
+function list(id,xs,cid,render){
+  $(id).innerHTML=(xs&&xs.length)?xs.map(x=>'<li>'+(render?render(x):rich(x))+'</li>').join(''):'<li class="none" style="background:none;border:0;padding:0">Nothing yet</li>';
+  if(cid)$(cid).textContent=xs&&xs.length?xs.length:'';
+}
+
+async function start(){
+  topic=$('topic').value.trim(); if(!topic){$('topic').focus();return}
+  const c=$('cycles').value;
+  const body={topic,interval:+$('interval').value||0,cycles:c?+c:null,question:$('q').value.trim()||null};
+  const r=await fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!r.ok)alert((await r.json()).detail); refresh();
+}
+async function stop(){ if(topic) await fetch('/api/stop?topic='+encodeURIComponent(topic),{method:'POST'}); refresh(); }
+async function reset(){
+  topic=$('topic').value.trim(); if(!topic)return;
+  if(!confirm('Start "'+topic+'" over from a fresh state?\n\nThe summary and round history are cleared. Pages already saved in RawTree are kept.'))return;
+  const r=await fetch('/api/reset?topic='+encodeURIComponent(topic),{method:'POST'});
+  if(!r.ok)alert((await r.json()).detail); refresh();
+}
+
+// plain-English status from the latest log line
+function status(d){
+  const el=$('status'), logs=d.logs||[], last=logs[logs.length-1]||'', s=d.state;
+  let title='Idle', detail=s.cycle?`Finished ${s.cycle} round${s.cycle>1?'s':''}. Press Start to continue.`:'Pick a library and press Start.', step=null, cls='';
+  if(d.running){
+    cls='run'; const m=last.match(/^\[cycle (\d+)\] (.*)$/); const n=m?m[1]:s.cycle+1, body=m?m[2]:'';
+    title=`Round ${n}`;
+    if(/selecting question/.test(body)){detail='Deciding what to investigate next…';step='ask'}
+    else if(/^Q: /.test(body)){detail='Searching the web: “'+body.slice(3)+'”';step='search'}
+    else if(/observations/.test(body)){const o=body.match(/(\d+) observations, (\d+) new/);detail=`Read ${o?o[1]:''} pages (${o?o[2]:''} new, saved). Updating its summary with Liquid AI…`;step='think'}
+    else if(/^done/.test(body)){detail='Round complete. Waiting before the next round…';step='wait'}
+    else if(/failed/.test(body)){cls='err';detail=body;title='Round '+n+' failed'}
+    else detail=body||'Starting…';
+  } else if(/stopped:|failed/.test(last)){cls='err';title='Stopped with an error';detail=last}
+  el.className='status '+cls; $('statusTitle').textContent=title; $('statusDetail').textContent=detail;
+  document.querySelectorAll('.step').forEach(x=>x.classList.toggle('on',x.dataset.s===step));
+  $('startBtn').disabled=d.running; $('stopBtn').disabled=!d.running; $('resetBtn').disabled=d.running;
+}
+
+// line chart: pages read vs items in focus, one shared count axis
+function chart(cs){
+  const svg=$('chart'), tip=$('tip');
+  if(!cs.length){svg.innerHTML='';svg.style.height='60px';svg.innerHTML=`<text x="0" y="30">The chart fills in as rounds complete.</text>`;return}
+  svg.style.height='220px';
+  const css=getComputedStyle(document.documentElement), c1=css.getPropertyValue('--series-1').trim(), c2=css.getPropertyValue('--series-2').trim(),
+        surf=css.getPropertyValue('--surface').trim(), grid=css.getPropertyValue('--line').trim(), axis=css.getPropertyValue('--line-strong').trim();
+  const W=svg.clientWidth||700, H=220, L=36, R=96, T=10, B=26, w=W-L-R, h=H-T-B;
+  const max=Math.max(1,...cs.map(c=>Math.max(c.evidence_total,c.working_state_size)));
+  const nice=Math.pow(10,Math.floor(Math.log10(max))), top=Math.ceil(max/nice)*nice;
+  const x=i=>L+(cs.length<2?w/2:i*w/(cs.length-1)), y=v=>T+h-v*h/top;
+  let g='';
+  for(let k=0;k<=4;k++){const v=top*k/4,yy=y(v);g+=`<line x1="${L}" x2="${L+w}" y1="${yy}" y2="${yy}" stroke="${k?grid:axis}" stroke-width="1"/><text x="${L-8}" y="${yy+4}" text-anchor="end">${Math.round(v)}</text>`}
+  const step=Math.max(1,Math.ceil(cs.length/10));
+  cs.forEach((c,i)=>{if(i%step===0||i===cs.length-1)g+=`<text x="${x(i)}" y="${H-6}" text-anchor="middle">${c.cycle}</text>`});
+  const line=(k,col)=>`<polyline fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="${cs.map((c,i)=>x(i)+','+y(c[k])).join(' ')}"/>`+
+    cs.map((c,i)=>`<circle cx="${x(i)}" cy="${y(c[k])}" r="4" fill="${col}" stroke="${surf}" stroke-width="2"/>`).join('');
+  const lc=cs[cs.length-1], ly1=y(lc.evidence_total), ly2=y(lc.working_state_size), sep=Math.abs(ly1-ly2)<16?(ly1<ly2?-8:8):0;
+  const lbl=(v,yy,col,t)=>`<text x="${x(cs.length-1)+10}" y="${yy+4}" style="fill:var(--text-2);font-weight:600">${v} <tspan style="fill:var(--muted);font-weight:400">${t}</tspan></text>`;
+  svg.innerHTML=g+line('evidence_total',c1)+line('working_state_size',c2)+lbl(lc.evidence_total,ly1+sep,c1,'read')+lbl(lc.working_state_size,ly2-sep,c2,'in focus')+
+    `<line id="xh" y1="${T}" y2="${T+h}" stroke="${axis}" stroke-dasharray="3 3" style="display:none"/><rect x="${L}" y="${T}" width="${w}" height="${h}" fill="transparent" id="hit"/>`;
+  const hit=svg.querySelector('#hit'), xh=svg.querySelector('#xh');
+  hit.onmousemove=e=>{const r=svg.getBoundingClientRect(), px=e.clientX-r.left;
+    const i=cs.length<2?0:Math.max(0,Math.min(cs.length-1,Math.round((px-L)/w*(cs.length-1)))), c=cs[i];
+    xh.setAttribute('x1',x(i));xh.setAttribute('x2',x(i));xh.style.display='';
+    tip.innerHTML=`<div style="font-weight:600;margin-bottom:4px">Round ${c.cycle}</div>`+
+      `<div class="r"><span><i style="background:${c1}"></i> Pages read</span><b>${c.evidence_total}</b></div>`+
+      `<div class="r"><span><i style="background:${c2}"></i> In focus</span><b>${c.working_state_size}</b></div>`+
+      `<div class="r" style="color:var(--muted)"><span>New this round</span><span>${c.new_evidence}</span></div>`;
+    tip.style.display='block'; const tx=x(i)+12, tw=tip.offsetWidth; tip.style.left=(tx+tw>W?x(i)-tw-12:tx)+'px'; tip.style.top=(T+10)+'px'};
+  hit.onmouseleave=()=>{tip.style.display='none';xh.style.display='none'};
+}
+
+async function refresh(){
+  const tl=await (await fetch('/api/topics')).json();
+  $('topics').innerHTML=tl.topics.map(t=>`<option value="${esc(t)}">`).join('');
+  if(!topic&&tl.topics.length){topic=tl.topics[0];$('topic').value=topic}
+  if(!topic)return;
+  const d=await (await fetch('/api/state?topic='+encodeURIComponent(topic))).json(); lastData=d;
+  const s=d.state, cs=d.cycles; sources=d.sources||{};
+  status(d);
+  const focus=s.active_facts.length+s.active_changes.length+s.hypotheses.length+s.open_questions.length+s.stale_claims.length;
+  $('sRounds').textContent=s.cycle; $('sPages').textContent=s.evidence_count; $('sFocus').textContent=focus;
+  $('sArch').textContent=s.archived_count; $('sFiles').textContent=s.impacted_files.length;
+  chart(cs);
+  const last=cs[cs.length-1];
+  $('question').innerHTML=last?rich(last.question):'Nothing yet. Press Start.';
+  $('next').innerHTML=s.next_action?'<b>Next step it suggested:</b> '+esc(s.next_action):'';
+  list('changes',s.active_changes,'cChanges'); list('facts',s.active_facts,'cFacts');
+  list('risks',s.hypotheses,'cRisks'); list('open',s.open_questions,'cOpen');
+  list('stale',s.stale_claims,'cStale',x=>{const p=x.split(' — superseded');return '<span class="was">'+rich(p[0])+'</span>'+(p[1]&&p[1].replace(/^:\s*/,'').trim()?'<span class="now">Now: '+rich(p[1].replace(/^:\s*/,''))+'</span>':'')});
+  if(s.impacted_files.length){
+    $('impact').innerHTML=s.impacted_files.map(f=>`<div class="file"><div class="p">${esc(f.path)}</div>`+(f.hits||[]).slice(0,3).map(h=>`<div class="l">L${h.line}: ${esc(h.code)}</div>`).join('')+`</div>`).join('');
+  } else {
+    $('impact').innerHTML=`<div class="none">No files flagged yet${s.code_signals.length?'. Watching for:':'.'}</div>`+
+      (s.code_signals.length?`<div class="signals">${s.code_signals.map(x=>`<span class="tag mono">${esc(x)}</span>`).join('')}</div>`:'')+
+      `<div class="sub" style="margin:10px 0 0">Set GITHUB_TOKEN and GITHUB_REPO in .env to scan your repo.</div>`;
+  }
+  $('sFilesH').textContent=s.impacted_files.length?'in your repo':'connect GitHub';
+  $('rounds').innerHTML=cs.length?'<tr><th>#</th><th>What it investigated</th><th>New pages</th><th>Recalled</th><th>Archived</th><th>In focus</th><th>Time</th></tr>'+
+    cs.slice().reverse().map(c=>`<tr><td class="num">${c.cycle}</td><td>${esc(c.question)}${c.warnings&&c.warnings.length?`<div class="sub" style="margin:4px 0 0;color:var(--bad)">${esc(c.warnings.join('; '))}</div>`:''}</td><td class="num">${c.new_evidence}</td><td class="num">${c.recalled}</td><td class="num">${c.dropped}</td><td class="num">${c.working_state_size}</td><td class="num">${Math.round(c.seconds)}s</td></tr>`).join('')
+    :'<tr><td class="none">No rounds yet.</td></tr>';
+  $('arch').innerHTML=d.archive.length?d.archive.slice().reverse().map(a=>`<li><span class="reason ${esc(a.reason)}">${esc(a.reason)}</span><span style="color:var(--muted);font-size:12px">round ${a.cycle}</span><div style="margin-top:4px">${rich(a.item)}</div></li>`).join(''):'<li class="none" style="background:none;padding:0">Nothing archived yet.</li>';
+  $('log').textContent=(d.logs||[]).join('\n')||'No activity yet.';
+}
+$('topic').addEventListener('change',()=>{topic=$('topic').value.trim();refresh()});
+addEventListener('resize',()=>{if(lastData)chart(lastData.cycles)});
+refresh(); setInterval(refresh,3000);
+</script>
+</body>
+</html>
