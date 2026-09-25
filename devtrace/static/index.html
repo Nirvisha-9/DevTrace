@@ -277,7 +277,7 @@ pre.log{margin:0;max-height:260px;overflow:auto;font:12px/1.6 "JetBrains Mono",m
     <div class="card stat"><div class="k">Pages read</div><div class="v" id="sPages">0</div><div class="h">all kept in RawTree</div></div>
     <div class="card stat"><div class="k">In focus</div><div class="v" id="sFocus">0</div><div class="h">items in the summary</div></div>
     <div class="card stat"><div class="k">Archived</div><div class="v" id="sArch">0</div><div class="h">moved out, never deleted</div></div>
-    <div class="card stat"><div class="k">Files at risk</div><div class="v" id="sFiles">0</div><div class="h" id="sFilesH">in your repo</div></div>
+    <div class="card stat"><div class="k">Files to review</div><div class="v" id="sFiles">0</div><div class="h" id="sFilesH">in your repo</div></div>
   </section>
 
   <section class="card pad chart-card">
@@ -315,8 +315,8 @@ pre.log{margin:0;max-height:260px;overflow:auto;font:12px/1.6 "JetBrains Mono",m
         <ul class="items risk" id="risks"></ul>
       </div>
       <div class="card pad">
-        <h2>Files at risk</h2>
-        <p class="sub" id="impactSub">Files in your repo that use the affected code.</p>
+        <h2>Files to review</h2>
+        <p class="sub" id="impactSub">Files in your repo that mention the affected code. Matched by name, so check each one.</p>
         <div id="impact"></div>
       </div>
       <div class="card pad">
@@ -495,7 +495,7 @@ async function refresh(){
   list('risks',s.hypotheses,'cRisks'); list('open',s.open_questions,'cOpen');
   list('stale',s.stale_claims,'cStale',x=>{const p=x.split(' — superseded');return '<span class="was">'+rich(p[0])+'</span>'+(p[1]&&p[1].replace(/^:\s*/,'').trim()?'<span class="now">Now: '+rich(p[1].replace(/^:\s*/,''))+'</span>':'')});
   if(s.impacted_files.length){
-    $('impact').innerHTML=s.impacted_files.map(f=>`<div class="file"><div class="p">${esc(f.path)}</div>`+(f.hits||[]).slice(0,3).map(h=>`<div class="l">L${h.line}: ${esc(h.code)}</div>`).join('')+`</div>`).join('');
+    $('impact').innerHTML=s.impacted_files.map(f=>`<div class="file"><div class="p">${esc(f.path)}</div>`+(f.hits||[]).slice(0,3).map(h=>`<div class="l">${h.line?'L'+h.line+': ':''}${esc(h.code)}</div>`).join('')+`</div>`).join('');
   } else {
     $('impact').innerHTML=`<div class="none">No files flagged yet${s.code_signals.length?'. Watching for:':'.'}</div>`+
       (s.code_signals.length?`<div class="signals">${s.code_signals.map(x=>`<span class="tag mono">${esc(x)}</span>`).join('')}</div>`:'')+

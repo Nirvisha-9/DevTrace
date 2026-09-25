@@ -74,11 +74,13 @@ def _idents(s):
         if ("_" in w or "." in w or re.search(r"[a-z][A-Z]",w)) and not VERSION.match(w.lower()): out.add(w.lower())
     return out
 
-def similar(a,b,threshold=0.5):
-    """Same subject: most content words shared, or the same code identifier."""
-    ta,tb=_terms(a),_terms(b)
+def similar(a,b,threshold=0.5,topic=""):
+    """Same subject: most content words shared, or the same code identifier.
+    The topic's own name (e.g. "next.js") is in every question, so it never counts as shared."""
+    ignore=_terms(topic)|_idents(topic)|{w for w in re.split(r"[\s/]+",topic.lower()) if w}
+    ta,tb=_terms(a)-ignore,_terms(b)-ignore
     if ta and tb and len(ta&tb)/len(ta|tb)>=threshold: return True
-    return bool(_idents(a)&_idents(b))
+    return bool((_idents(a)-ignore)&(_idents(b)-ignore))
 
 class StateEditor:
     def __init__(self,reasoner): self.reasoner=reasoner
@@ -111,13 +113,14 @@ class StateEditor:
             json.dumps(state.prompt_view()))
         q=str(plan.get("question","")).strip()
         recent=state.recent_questions
-        if not q or any(similar(q,r) for r in recent):
+        t=state.topic
+        if not q or any(similar(q,r,topic=t) for r in recent):
             # Model circled back to a subject it just covered: move on to something it hasn't asked about.
             t=state.topic
             pool=state.open_questions+[f"{t} migration guide",f"{t} deprecation warnings",
                                        f"{t} changelog latest release",f"{t} security advisories",
                                        f"{t} upgrade breaking issues github"]
-            fresh=[x for x in pool if not any(similar(x,r) for r in recent)]
+            fresh=[x for x in pool if not any(similar(x,r,topic=t) for r in recent)]
             q=fresh[0] if fresh else f"{t} release notes {len(recent)}"
             plan={"question":q,"reason":"moved on: the model's pick repeated a recent subject"}
         plan["kind"]="auto"

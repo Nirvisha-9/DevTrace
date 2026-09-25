@@ -1,4 +1,4 @@
-import io, tarfile, requests
+import io, re, tarfile, requests
 from devtrace.config import GITHUB_TOKEN,GITHUB_REPO,MAX_IMPACTED_FILES
 
 CODE_EXT=(".py",".js",".ts",".tsx",".jsx",".mjs",".java",".go",".rs",".rb",".kt",".swift",".cs",".php",
@@ -34,8 +34,29 @@ class GitHubClient:
                 files[path]=t.extractfile(m).read().decode("utf-8","ignore")
         self._files=files; self._sha=sha
 
+    @staticmethod
+    def specific(signal):
+        """A bare package name ("next", "react") matches every file that imports it, which says nothing
+        about a change. Only scan for specific APIs: dotted/scoped/path names, snake_case or camelCase."""
+        return bool(re.search(r"[._/@]|[a-z][A-Z]",signal))
+
+    @staticmethod
+    def expand(signals):
+        """Normalize what the model reports into what code actually contains:
+        "params/searchParams" -> searchParams; "next.config.js" -> next.config. (any js/ts extension)."""
+        out=[]
+        for s in signals:
+            s=s.strip().strip("`'\"()")
+            parts=[s]
+            if "/" in s and not s.startswith("@") and not re.match(r"^[a-z0-9-]+/[a-z0-9-]+$",s):
+                parts+=s.split("/")                  # composite like params/searchParams (keep module paths like next/image)
+            for p in parts:
+                p=re.sub(r"\.(js|ts|mjs|cjs|jsx|tsx)$",".",p)
+                if len(p)>=3 and GitHubClient.specific(p) and p not in out: out.append(p)
+        return out
+
     def search_code(self, signals):
-        signals=[s for s in dict.fromkeys(x.strip() for x in signals) if len(s)>=3]
+        signals=self.expand(signals)
         if not self.enabled(): return {"enabled":False,"matches":[]}
         if not signals: return {"enabled":True,"sha":self._sha,"matches":[]}
         self._load()
@@ -49,7 +70,10 @@ class GitHubClient:
                     if sl in l:
                         used.add(s)
                         if len(hits)<5: hits.append({"line":i+1,"signal":s,"code":lines[i].strip()[:200]})
-            if used: matches.append({"path":path,"signals":sorted(used),"hits":hits})
+            for s in signals:                       # e.g. a renamed file such as middleware.ts
+                if s.lower() in path.lower() and s not in used:
+                    used.add(s); hits.insert(0,{"line":0,"signal":s,"code":"(file name matches)"})
+            if used: matches.append({"path":path,"signals":sorted(used),"hits":hits[:5]})
         matches.sort(key=lambda m:(-len(m["signals"]),m["path"]))
         return {"enabled":True,"repo":GITHUB_REPO,"sha":self._sha,"files_scanned":len(self._files),
                 "matches":matches[:MAX_IMPACTED_FILES]}

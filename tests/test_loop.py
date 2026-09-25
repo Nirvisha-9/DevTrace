@@ -166,6 +166,14 @@ def test_second_runner_on_same_topic_is_refused():
     b.run_cycle(); a.run_cycle()                     # a picks up b's round instead of forking history
     assert a.state.cycle==2 and [c["cycle"] for c in a.store.cycles()]==[1,2]
 
+def test_signal_expansion_and_topic_aware_similarity():
+    from devtrace.integrations.github import GitHubClient as G
+    from devtrace.agent.state_editor import similar
+    assert G.expand(["next.config.js","params/searchParams","next","react-dom","next/image"])==\
+        ["next.config.","params/searchParams","searchParams","next/image"]
+    assert not similar("next.js release notes","Next.js 16 middleware to proxy migration",topic="next.js")
+    assert similar("Next.js 16 async params migration","How to migrate to async params in Next.js 16?",topic="next.js")
+
 if __name__=="__main__":
     for k,v in list(globals().items()):
         if k.startswith("test_"): v(); print("ok",k)

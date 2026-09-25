@@ -82,7 +82,7 @@ class Orchestrator:
 
         impact={"enabled":False,"matches":[]}
         try:
-            impact=self.github.search_code(new.code_signals+[self.topic])
+            impact=self.github.search_code(new.code_signals)
             if impact.get("enabled"): new.impacted_files=impact["matches"]
         except Exception as e: warnings.append(f"github: {e}")
 
